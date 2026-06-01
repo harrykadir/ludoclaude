@@ -38,6 +38,9 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 #dice-display { font-size:3.8rem; margin:5px 0; display:inline-block; filter:drop-shadow(0 3px 8px rgba(102,126,234,0.5)); }
 #dice-display.rolling { animation:roll 0.5s ease; }
 @keyframes roll { 0%,100%{transform:rotate(0)scale(1)} 50%{transform:rotate(22deg)scale(1.2)} }
+@keyframes tokenPulse { from{filter:drop-shadow(0 0 4px #fff)} to{filter:drop-shadow(0 0 10px #fff) brightness(1.2)} }
+#afk-warning { display:none; position:fixed; bottom:0; left:0; right:0; z-index:150; background:linear-gradient(90deg,#b7410e,#e74c3c); padding:12px 24px; align-items:center; justify-content:center; gap:14px; font-size:0.9rem; font-weight:600; }
+#afk-warning button { padding:6px 16px; border-radius:8px; border:none; background:#fff; color:#b7410e; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
 
 .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(8px); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s; }
 .overlay.show { opacity:1; pointer-events:all; }
@@ -131,6 +134,11 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
     <button class="btn btn-primary" style="padding:11px 28px" onclick="resetGame()">Nouvelle partie</button>
     <a href="index.html" class="btn btn-secondary" style="display:inline-block;margin-top:9px;padding:11px 28px;text-decoration:none">Accueil</a>
   </div>
+</div>
+
+<div id="afk-warning">
+  ⚠️ Inactif depuis longtemps — expulsion dans <span id="afk-countdown">120</span>s
+  <button onclick="afkStillHere()">Je suis là !</button>
 </div>
 
 <div class="main">
@@ -343,7 +351,8 @@ function renderTokens(){
   const tokens=state.session.game_data?.tokens||{};
   const gd=state.session?.game_data||{};
 
-  const byPos={};
+  // Group tokens by logical position (pi, rel) to avoid floating-point grouping errors
+  const byKey={};
   state.players.filter(p=>p.is_active).forEach(p=>{
     const pi=boardIndex(p.id);
     if(pi<0) return;
@@ -352,29 +361,50 @@ function renderTokens(){
       const rel=tok.rel??-1;
       if(rel>=59) return;
       const pos=tokenPx(pi,ti,rel);
-      const key=`${Math.round(pos.x/6)*6},${Math.round(pos.y/6)*6}`;
-      if(!byPos[key]) byPos[key]=[];
-      byPos[key].push({p,pi,ti,rel,pos});
+      // Group only same-cell tokens (same absolute track position or same home spot)
+      const absPos=rel>=0&&rel<=53?(rel+SETUPS[pi].offset)%54:`${pi},${rel}`;
+      const key=String(absPos);
+      if(!byKey[key]) byKey[key]=[];
+      byKey[key].push({p,pi,ti,rel,pos});
     });
   });
 
-  const off=[[0,0],[-10,0],[10,0],[0,-10],[0,10],[8,8]];
-  Object.values(byPos).forEach(group=>{
+  // Selectable tokens when in selecting phase
+  const isSelecting=gd.phase==='selecting'&&isMyTurn();
+  let selectableMoves=[];
+  if(isSelecting){
+    const pi=boardIndex(state.myPlayer.id);
+    const myToks=gd.tokens[state.myPlayer.id]||[{rel:-1},{rel:-1},{rel:-1},{rel:-1}];
+    selectableMoves=getValidMoves(pi,myToks,gd.dice);
+  }
+
+  const off=[[0,0],[-9,0],[9,0],[0,-9],[0,9],[7,7]];
+  Object.values(byKey).forEach(group=>{
     group.forEach(({p,pi,ti,rel,pos},idx)=>{
       const [ox,oy]=off[Math.min(idx,off.length-1)];
       const cx=pos.x+ox, cy=pos.y+oy;
       const s=SETUPS[pi];
       const isSel=gd.sel_player===p.id&&gd.sel_token===ti;
       const isMe=p.id===state.myPlayer?.id;
-      // Shadow circle
-      g.appendChild(svgEl('circle',{cx:cx+1,cy:cy+2,r:10,fill:'rgba(0,0,0,0.4)',filter:'blur'}));
+      const move=isSelecting&&isMe?selectableMoves.find(m=>m.tokenIdx===ti):null;
+      const isMovable=!!move;
+
+      // Shadow
+      g.appendChild(svgEl('circle',{cx:cx+1,cy:cy+2,r:10,fill:'rgba(0,0,0,0.35)'}));
       // Token body
-      g.appendChild(svgEl('circle',{cx,cy,r:10,fill:s.hex,
-        stroke:isSel?'gold':isMe?'#fff':'rgba(255,255,255,0.65)',
-        'stroke-width':isSel?3:isMe?2:1.2}));
+      const circle=svgEl('circle',{cx,cy,r:10,fill:s.hex,
+        stroke:isMovable?'#fff':isSel?'gold':isMe?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.5)',
+        'stroke-width':isMovable?3:isSel?3:isMe?2:1.2});
+      if(isMovable){
+        circle.style.cursor='pointer';
+        circle.style.animation='tokenPulse 0.8s ease-in-out infinite alternate';
+        circle.setAttribute('onclick',`selectTokenOnBoard(${ti},${JSON.stringify(move)})`);
+      }
+      g.appendChild(circle);
       // Number
-      g.appendChild(svgEl('text',{x:cx,y:cy+4,'text-anchor':'middle',fill:'#fff',
-        'font-size':8,'font-weight':'bold','font-family':'Inter'},String(ti+1)));
+      const txt=svgEl('text',{x:cx,y:cy+4,'text-anchor':'middle',fill:'#fff',
+        'font-size':8,'font-weight':'bold','font-family':'Inter','pointer-events':'none'},String(ti+1));
+      g.appendChild(txt);
     });
   });
 }
@@ -384,7 +414,10 @@ function renderTokens(){
 // ============================================================
 let state = {session:null, players:[], myPlayer:null};
 let heartbeatInterval = null;
-const HEARTBEAT_MS=15000, STALE_MS=45000;
+let afkInterval = null;
+let _lastAction = Date.now();
+const HEARTBEAT_MS=15000, STALE_MS=600000; // 10 min stale threshold
+const AFK_WARN_MS=480000; // warn after 8 min idle (2 min before stale)
 
 function boardIndex(playerId) {
   const active = state.players.filter(p=>p.is_active).sort((a,b)=>a.turn_order-b.turn_order);
@@ -401,14 +434,40 @@ function isMyTurn() {
   return state.session?.current_player_id === state.myPlayer?.id && state.session?.status === 'playing';
 }
 
+function touchAction() { _lastAction = Date.now(); hideAfkWarning(); }
+
 function startHeartbeat() {
   stopHeartbeat();
   heartbeatInterval = setInterval(async()=>{
     if (state.myPlayer) await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',state.myPlayer.id);
   }, HEARTBEAT_MS);
+  // AFK check every second
+  afkInterval = setInterval(()=>{
+    const idle = Date.now() - _lastAction;
+    if (idle >= AFK_WARN_MS) {
+      const secsLeft = Math.max(0, Math.round((STALE_MS - idle) / 1000));
+      showAfkWarning(secsLeft);
+    } else {
+      hideAfkWarning();
+    }
+  }, 1000);
 }
-function stopHeartbeat() { if(heartbeatInterval){clearInterval(heartbeatInterval);heartbeatInterval=null;} }
+function stopHeartbeat() {
+  if(heartbeatInterval){clearInterval(heartbeatInterval);heartbeatInterval=null;}
+  if(afkInterval){clearInterval(afkInterval);afkInterval=null;}
+}
 
+function showAfkWarning(secsLeft) {
+  let w = document.getElementById('afk-warning');
+  if (!w) return;
+  w.style.display = 'flex';
+  document.getElementById('afk-countdown').textContent = secsLeft;
+}
+function hideAfkWarning() {
+  const w = document.getElementById('afk-warning');
+  if (w) w.style.display = 'none';
+}
+function afkStillHere() { touchAction(); }
 async function cleanStalePlayers() {
   const thr = new Date(Date.now()-STALE_MS).toISOString();
   const stale = state.players.filter(p=>p.is_active&&p.last_seen&&p.last_seen<thr);
@@ -619,10 +678,33 @@ async function loadGameState() {
   if(sess) state.session=sess;
   const {data:players}=await sb.from('players').select('*').eq('session_id',state.session.id).order('turn_order');
   if(players) state.players=players;
-  if(state.myPlayer){const me=players?.find(p=>p.id===state.myPlayer.id);if(me)state.myPlayer=me;}
+  if(state.myPlayer){
+    const me=players?.find(p=>p.id===state.myPlayer.id);
+    if(me){
+      if(!me.is_active && state.myPlayer.is_active){
+        // We were expelled for inactivity
+        stopHeartbeat();
+        showExpulsionMessage();
+        return;
+      }
+      state.myPlayer=me;
+    }
+  }
   await cleanStalePlayers();
   await fixStaleSession();
   renderAll();
+}
+
+function showExpulsionMessage(){
+  const overlay=document.getElementById('joinOverlay');
+  document.getElementById('joinModal').innerHTML=`
+    <div style="text-align:center;padding:10px 0">
+      <div style="font-size:2.5rem;margin-bottom:12px">😴</div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:8px">Expulsé pour inactivité</h2>
+      <p style="color:rgba(255,255,255,0.5);font-size:0.88rem;margin-bottom:22px">Vous avez été retiré de la partie après trop longtemps sans action.</p>
+      <button class="btn btn-primary" style="width:100%;padding:12px" onclick="location.reload()">Rejoindre à nouveau</button>
+    </div>`;
+  overlay.classList.add('show');
 }
 
 // ============================================================
@@ -669,8 +751,11 @@ function updateStatus() {
     bar.textContent='🎲 Tirage de l\'ordre…';
   } else if(sess.status==='playing'){
     const curr=state.players.find(p=>p.id===sess.current_player_id);
-    if(isMyTurn()){bar.textContent='🎲 Lancez le dé !';bar.style.color='#2ecc71';}
-    else{bar.textContent=`⏳ Tour de ${curr?.name||'…'}`;}
+    const phase=sess.game_data?.phase;
+    if(isMyTurn()){
+      if(phase==='selecting'){bar.textContent='👆 Cliquez sur un pion à déplacer';bar.style.color='#f1c40f';}
+      else{bar.textContent='🎲 Lancez le dé !';bar.style.color='#2ecc71';}
+    } else{bar.textContent=`⏳ Tour de ${curr?.name||'…'}`;}
   }
 }
 
@@ -742,6 +827,7 @@ async function doInitRoll() {
 // GAME FLOW
 // ============================================================
 async function rollDice() {
+  touchAction();
   document.getElementById('rollBtn').disabled=true;
   const el=document.getElementById('dice-display');
   el.classList.add('rolling');
@@ -786,8 +872,8 @@ async function finalizeDice() {
     showQuestion(val,moves[0]);return;
   }
 
+  // Multiple moves — highlight tokens on board, no modal
   await sb.from('game_sessions').update({game_data:{...gd,dice:val,phase:'selecting'}}).eq('id',state.session.id);
-  showTokenSelect(val,moves,pi);
 }
 
 function getValidMoves(pi,ptoks,dice){
@@ -825,6 +911,14 @@ async function selectToken(ti,move){
   showQuestion(gd.dice,move);
 }
 
+async function selectTokenOnBoard(ti,move){
+  touchAction();
+  const gd=state.session.game_data;
+  await sb.from('game_sessions').update({game_data:{...gd,phase:'question',
+    sel_player:state.myPlayer.id,sel_token:ti,pending_move:move}}).eq('id',state.session.id);
+  showQuestion(gd.dice,move);
+}
+
 function showQuestion(dice,move){
   const lvl=move.to>=54?'hard':move.to>=27?'medium':'easy';
   const pool=LUDO_QUESTIONS.filter(q=>q.level===lvl);
@@ -842,6 +936,7 @@ function showQuestion(dice,move){
 }
 
 async function answerQ(chosen,correct){
+  touchAction();
   const opts=document.querySelectorAll('.q-option');
   opts.forEach(o=>o.disabled=true);
   const ok=chosen===correct;
