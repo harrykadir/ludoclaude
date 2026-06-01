@@ -184,14 +184,14 @@ const MAX_PLAYERS = 6;
 // BOARD GEOMETRY — 700×700 SVG, inspired by reference board
 // ============================================================
 const CX=350, CY=350;
-const R_TRACK=228;          // outer ring radius
-const R_HS=[192,153,114,75,36]; // home stretch: rel=54→192 (outermost), rel=58→36 (innermost)
-const HZ_R=278;             // home-zone center distance from board center
-const HZ_DELTA=25;          // angular offset of home zone vs home stretch (degrees)
-const HZ_SP=34;             // spot spacing in home zone cluster
-const TR=11;                // track cell radius (px)
-const HR=12;                // home stretch cell radius (px)
-const HZR=14;               // home zone spot radius (px)
+const R_TRACK=195;          // outer ring radius
+const R_HS=[163,130,97,64,32]; // home stretch cells: rel=54 (outermost) to rel=58 (innermost)
+const HZ_R=272;             // home-zone center distance from board center (outside track ring)
+const HZ_DELTA=0;           // no angular offset — zones aligned with home stretch direction
+const HZ_SP=24;             // spot spacing in home zone cluster
+const TR=10;                // track cell radius (px)
+const HR=10;                // home stretch cell radius (px)
+const HZR=12;               // home zone spot radius (px)
 const N_HS=5, N_TOTAL=54;
 
 // 6 player slots; angle = home-stretch direction (deg CW from top = 0°)
@@ -251,7 +251,7 @@ function buildBoard(){
 function drawLanes(){
   const g=document.getElementById('g-lanes');
   // Outer ring background
-  g.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_TRACK+TR+10,
+  g.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_TRACK+TR+8,
     fill:'#13112e',stroke:'rgba(255,255,255,0.07)','stroke-width':1.5}));
   // Colored radial lanes for each player's home stretch
   SETUPS.forEach((s,pi)=>{
@@ -308,22 +308,23 @@ function drawHomeZones(){
   g.innerHTML='';
   SETUPS.forEach((s,pi)=>{
     const c=px(SETUPS[pi].angle+HZ_DELTA, HZ_R);
-    const half=HZ_SP+HZR+4;
+    const half=HZ_SP+HZR+5;
     // Rounded box
     g.appendChild(svgEl('rect',{
       x:(c.x-half).toFixed(1),y:(c.y-half).toFixed(1),
-      width:(half*2).toFixed(1),height:(half*2).toFixed(1),rx:14,
-      fill:s.hex+'1a',stroke:s.hex,'stroke-width':2.2}));
+      width:(half*2).toFixed(1),height:(half*2).toFixed(1),rx:13,
+      fill:s.hex+'22',stroke:s.hex,'stroke-width':2.5}));
     // 4 spots
     for(let ti=0;ti<4;ti++){
       const sp=homeSpotPx(pi,ti);
       g.appendChild(svgEl('circle',{cx:sp.x,cy:sp.y,r:HZR,
-        fill:s.hex+'55',stroke:s.hex,'stroke-width':1.5}));
+        fill:s.hex+'66',stroke:s.hex,'stroke-width':1.8}));
     }
-    // Player label
-    const lbl=px(SETUPS[pi].angle+HZ_DELTA, HZ_R+half+13);
+    // Player label inside box (near top edge)
+    const lblOffset=half-9;
+    const lbl=px(SETUPS[pi].angle+HZ_DELTA, HZ_R-lblOffset);
     g.appendChild(svgEl('text',{x:lbl.x,y:lbl.y+4,'text-anchor':'middle',
-      fill:s.hex,'font-size':11,'font-weight':'bold','font-family':'Inter'},s.name));
+      fill:s.hex,'font-size':10,'font-weight':'bold','font-family':'Inter'},s.name));
   });
 }
 
@@ -462,8 +463,24 @@ async function joinGame() {
   const savedName=localStorage.getItem(`ludo_name_${TABLE_ID}`);
   try {
     let session;
+
+    // Check if we can rejoin an existing game (player already in a live session)
+    if (savedId) {
+      const {data:ret}=await sb.from('players').select('*').eq('id',savedId).single();
+      if (ret&&ret.is_active) {
+        const {data:liveSess}=await sb.from('game_sessions').select('*').eq('id',ret.session_id).single();
+        if (liveSess&&liveSess.status!=='finished') {
+          await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',ret.id);
+          state.myPlayer={...ret}; state.session=liveSess;
+          document.getElementById('joinOverlay').classList.remove('show');
+          await loadGameState(); startHeartbeat(); subscribeRealtime(); return;
+        }
+      }
+    }
+
+    // Only join/reuse sessions in 'waiting' status
     const {data:existing}=await sb.from('game_sessions').select('*')
-      .eq('table_id',TABLE_ID).eq('game_type','ludo').neq('status','finished')
+      .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting')
       .order('created_at',{ascending:false}).limit(1).single();
 
     if (existing) {
@@ -482,16 +499,6 @@ async function joinGame() {
       }).select().single();
       if(error) throw error;
       session=ns;
-    }
-
-    if (savedId&&savedName===name) {
-      const {data:ret}=await sb.from('players').select('*').eq('id',savedId).single();
-      if (ret&&ret.session_id===session.id) {
-        await sb.from('players').update({is_active:true,last_seen:new Date().toISOString()}).eq('id',ret.id);
-        state.myPlayer={...ret,is_active:true}; state.session=session;
-        document.getElementById('joinOverlay').classList.remove('show');
-        await loadGameState(); startHeartbeat(); subscribeRealtime(); return;
-      }
     }
 
     const {data:allP}=await sb.from('players').select('*').eq('session_id',session.id);
