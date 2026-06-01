@@ -323,11 +323,6 @@ function drawHomeZones(){
       g.appendChild(svgEl('circle',{cx:sp.x,cy:sp.y,r:HZR,
         fill:s.hex+'66',stroke:s.hex,'stroke-width':1.8}));
     }
-    // Player label inside box (near top edge)
-    const lblOffset=half-9;
-    const lbl=px(SETUPS[pi].angle+HZ_DELTA, HZ_R-lblOffset);
-    g.appendChild(svgEl('text',{x:lbl.x,y:lbl.y+4,'text-anchor':'middle',
-      fill:s.hex,'font-size':10,'font-weight':'bold','font-family':'Inter'},s.name));
   });
 }
 
@@ -467,19 +462,22 @@ async function joinGame() {
   try {
     let session;
 
-    // Step 1: Reconnect only if there is an active 'playing' game with this player
+    // Step 1: Check savedId — reconnect to active game, or free up the old slot
     if (savedId) {
       const {data:ret}=await sb.from('players').select('*').eq('id',savedId).single();
-      if (ret&&ret.is_active) {
+      if (ret) {
         const {data:liveSess}=await sb.from('game_sessions').select('*').eq('id',ret.session_id).single();
-        if (liveSess&&liveSess.status==='playing') {
+        const isLive=liveSess&&ret.is_active&&(liveSess.status==='playing'||liveSess.status==='init_rolling');
+        if (isLive) {
+          // Reconnect to ongoing game
           await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',ret.id);
           state.myPlayer={...ret}; state.session=liveSess;
           document.getElementById('joinOverlay').classList.remove('show');
           await loadGameState(); startHeartbeat(); subscribeRealtime(); return;
         }
+        // Not a live game — free up the old player slot so name/count are correct
+        if (ret.is_active) await sb.from('players').update({is_active:false}).eq('id',savedId);
       }
-      // Session is not an active game — clear stale local storage and start fresh
       localStorage.removeItem(`ludo_player_${TABLE_ID}`);
       localStorage.removeItem(`ludo_name_${TABLE_ID}`);
     }
@@ -604,10 +602,11 @@ async function startInitRoll() {
   const active=state.players.filter(p=>p.is_active);
   const initTokens={};
   active.forEach(p=>{initTokens[p.id]=[{rel:-1},{rel:-1},{rel:-1},{rel:-1}];});
-  await sb.from('game_sessions').update({
+  const {error}=await sb.from('game_sessions').update({
     status:'init_rolling',
     game_data:{tokens:initTokens,phase:'rolling',init_rolls:{},play_order:[]}
   }).eq('id',state.session.id);
+  if(error) addLog('Erreur démarrage: '+error.message);
 }
 
 function updateInitRollUI() {
