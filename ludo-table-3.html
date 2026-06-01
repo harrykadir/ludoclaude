@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>LudoClaude — Table 3</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -464,21 +467,24 @@ async function joinGame() {
   try {
     let session;
 
-    // Check if we can rejoin an existing game (player already in a live session)
+    // Step 1: Reconnect only if there is an active 'playing' game with this player
     if (savedId) {
       const {data:ret}=await sb.from('players').select('*').eq('id',savedId).single();
       if (ret&&ret.is_active) {
         const {data:liveSess}=await sb.from('game_sessions').select('*').eq('id',ret.session_id).single();
-        if (liveSess&&liveSess.status!=='finished') {
+        if (liveSess&&liveSess.status==='playing') {
           await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',ret.id);
           state.myPlayer={...ret}; state.session=liveSess;
           document.getElementById('joinOverlay').classList.remove('show');
           await loadGameState(); startHeartbeat(); subscribeRealtime(); return;
         }
       }
+      // Session is not an active game — clear stale local storage and start fresh
+      localStorage.removeItem(`ludo_player_${TABLE_ID}`);
+      localStorage.removeItem(`ludo_name_${TABLE_ID}`);
     }
 
-    // Only join/reuse sessions in 'waiting' status
+    // Step 2: Find an existing 'waiting' session to join
     const {data:existing}=await sb.from('game_sessions').select('*')
       .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting')
       .order('created_at',{ascending:false}).limit(1).single();
