@@ -85,21 +85,8 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 </header>
 
 <!-- JOIN -->
-<div class="overlay show" id="joinOverlay">
-  <div class="modal">
-    <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:5px">🎲 Rejoindre la table <span id="joinTableNum">1</span></h2>
-    <p style="color:rgba(255,255,255,0.45);margin-bottom:18px;font-size:0.88rem">2 à 6 joueurs — 4 pions chacun</p>
-    <div class="input-group" style="margin-bottom:12px">
-      <label>Votre nom</label>
-      <input type="text" id="nameInput" placeholder="Ex: Alice" maxlength="16" autocomplete="off">
-    </div>
-    <div class="error-msg" id="joinError"></div>
-    <button class="btn btn-primary" style="width:100%;padding:12px;margin-top:6px" onclick="joinGame()">Rejoindre →</button>
-    <div id="otherTablesSection" style="display:none;margin-top:18px;border-top:1px solid rgba(255,255,255,0.1);padding-top:14px">
-      <p style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:10px">Cette table est complète. Rejoindre une autre :</p>
-      <div id="otherTablesList" style="display:flex;flex-direction:column;gap:7px"></div>
-    </div>
-  </div>
+<div class="overlay" id="joinOverlay">
+  <div class="modal" id="joinModal"></div>
 </div>
 
 <!-- INIT ROLL -->
@@ -455,112 +442,174 @@ window.addEventListener('beforeunload',()=>{
 });
 
 // ============================================================
-// JOIN
+// JOIN MODAL — 3 steps: choose → (list) → name
 // ============================================================
-async function showOtherTables() {
-  const section=document.getElementById('otherTablesSection');
-  const list=document.getElementById('otherTablesList');
-  section.style.display='block';
-  list.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:0.8rem">Chargement…</div>';
-  const allNums=[1,2,3,4,5];
-  const currentNum=parseInt(TABLE_ID.split('-').pop());
-  const others=allNums.filter(n=>n!==currentNum);
-  const thr=new Date(Date.now()-STALE_MS).toISOString();
-  const rows=await Promise.all(others.map(async n=>{
-    const tid=`ludo-table-${n}`;
-    let count=0;
-    const {data:sess}=await sb.from('game_sessions').select('id,status').eq('table_id',tid).eq('game_type','ludo').neq('status','finished').order('created_at',{ascending:false}).limit(1).single();
-    if(sess){
-      const {count:c}=await sb.from('players').select('*',{count:'exact',head:true}).eq('session_id',sess.id).eq('is_active',true).gte('last_seen',thr);
-      count=c||0;
-    }
-    const full=count>=MAX_PLAYERS;
-    return `<a href="ludo-table-${n}.html" style="display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid ${full?'rgba(255,255,255,0.1)':'rgba(102,126,234,0.4)'};text-decoration:none;color:#fff;${full?'opacity:0.45;pointer-events:none':''}">
-      <span style="font-weight:600;font-size:0.9rem">Table ${n}</span>
-      <span style="font-size:0.8rem;color:${full?'#e74c3c':count>0?'#f1c40f':'#2ecc71'}">${count}/${MAX_PLAYERS} joueurs${full?' — Complète':''}</span>
-    </a>`;
-  }));
-  list.innerHTML=rows.join('');
+let _joinMode = 'create'; // 'create' | 'join'
+
+function joinOverlayShow() { document.getElementById('joinOverlay').classList.add('show'); }
+function joinOverlayHide() { document.getElementById('joinOverlay').classList.remove('show'); }
+
+function renderJoinStep(step, extra) {
+  const m = document.getElementById('joinModal');
+  const tableNum = TABLE_ID.split('-').pop();
+
+  if (step === 'choose') {
+    m.innerHTML = `
+      <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:6px">🎲 LudoClaude</h2>
+      <p style="color:rgba(255,255,255,0.45);font-size:0.88rem;margin-bottom:22px">Table ${tableNum} · 2 à 6 joueurs · 4 pions chacun</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-primary" style="padding:14px;font-size:1rem" onclick="joinGoCreate()">+ Créer une partie</button>
+        <button class="btn btn-secondary" style="padding:14px;font-size:1rem" onclick="joinGoList()">Rejoindre une table existante</button>
+      </div>`;
+
+  } else if (step === 'list') {
+    m.innerHTML = `
+      <button onclick="renderJoinStep('choose')" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.85rem;margin-bottom:14px;padding:0">← Retour</button>
+      <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:4px">Rejoindre une table</h3>
+      <p style="color:rgba(255,255,255,0.4);font-size:0.82rem;margin-bottom:14px">Choisissez une table avec des joueurs en attente.</p>
+      <div id="joinListContainer" style="display:flex;flex-direction:column;gap:8px">
+        <div style="color:rgba(255,255,255,0.35);font-size:0.85rem;text-align:center;padding:16px">Chargement…</div>
+      </div>`;
+    loadJoinList();
+
+  } else if (step === 'name') {
+    const title = _joinMode === 'create' ? `Créer une partie — Table ${tableNum}` : `Rejoindre — Table ${tableNum}`;
+    const btn   = _joinMode === 'create' ? 'Créer la partie →' : 'Rejoindre →';
+    m.innerHTML = `
+      <button onclick="renderJoinStep(_joinMode==='create'?'choose':'list')" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.85rem;margin-bottom:14px;padding:0">← Retour</button>
+      <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px">${title}</h3>
+      <div class="input-group" style="margin-bottom:10px">
+        <label>Votre nom</label>
+        <input type="text" id="nameInput" placeholder="Ex: Alice" maxlength="16" autocomplete="off"
+          onkeypress="if(event.key==='Enter')joinSubmit()" autofocus>
+      </div>
+      <div class="error-msg" id="joinError"></div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;margin-top:6px" onclick="joinSubmit()">${btn}</button>`;
+    setTimeout(()=>document.getElementById('nameInput')?.focus(), 50);
+  }
 }
 
-async function joinGame() {
-  const name=document.getElementById('nameInput').value.trim();
-  const err=document.getElementById('joinError');
-  if(!name){err.textContent='Entrez votre nom.';return;}
-  const savedId=localStorage.getItem(`ludo_player_${TABLE_ID}`);
-  const savedName=localStorage.getItem(`ludo_name_${TABLE_ID}`);
+function joinGoCreate() {
+  _joinMode = 'create';
+  renderJoinStep('name');
+}
+
+async function joinGoList() {
+  _joinMode = 'join';
+  renderJoinStep('list');
+}
+
+async function loadJoinList() {
+  const thr = new Date(Date.now()-STALE_MS).toISOString();
+  const currentNum = parseInt(TABLE_ID.split('-').pop());
+  const results = await Promise.all([1,2,3,4,5].map(async n => {
+    const tid = `ludo-table-${n}`;
+    let count = 0, hasWaiting = false;
+    const {data:sess} = await sb.from('game_sessions').select('id,status')
+      .eq('table_id',tid).eq('game_type','ludo').eq('status','waiting')
+      .order('created_at',{ascending:false}).limit(1).single();
+    if (sess) {
+      hasWaiting = true;
+      const {count:c} = await sb.from('players').select('*',{count:'exact',head:true})
+        .eq('session_id',sess.id).eq('is_active',true).gte('last_seen',thr);
+      count = c||0;
+    }
+    return {n, count, hasWaiting, full: count >= MAX_PLAYERS, isCurrent: n === currentNum};
+  }));
+
+  const available = results.filter(r => r.hasWaiting && !r.full);
+  const container = document.getElementById('joinListContainer');
+  if (!container) return;
+
+  if (!available.length) {
+    container.innerHTML = `<div style="color:rgba(255,255,255,0.4);font-size:0.85rem;text-align:center;padding:16px">Aucune table en attente.<br>Créez une nouvelle partie !</div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;margin-top:10px" onclick="joinGoCreate()">+ Créer une partie</button>`;
+    return;
+  }
+
+  container.innerHTML = available.map(r => {
+    const dotColor = r.count === 0 ? '#2ecc71' : r.count < 4 ? '#f1c40f' : '#e67e22';
+    if (r.isCurrent) {
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:10px;background:rgba(102,126,234,0.12);border:1px solid rgba(102,126,234,0.4)">
+        <div><span style="font-weight:700">Table ${r.n}</span> <span style="font-size:0.75rem;color:rgba(255,255,255,0.4)">(cette page)</span></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:0.82rem;color:${dotColor}">${r.count}/${MAX_PLAYERS}</span>
+          <button class="btn btn-primary" style="padding:5px 12px;font-size:0.8rem" onclick="_joinMode='join';renderJoinStep('name')">Rejoindre</button>
+        </div>
+      </div>`;
+    }
+    return `<a href="ludo-table-${r.n}.html?join=1" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);text-decoration:none;color:#fff">
+      <span style="font-weight:700">Table ${r.n}</span>
+      <span style="font-size:0.82rem;color:${dotColor}">${r.count}/${MAX_PLAYERS} joueurs</span>
+    </a>`;
+  }).join('');
+}
+
+async function joinSubmit() {
+  const nameEl = document.getElementById('nameInput');
+  const errEl  = document.getElementById('joinError');
+  const name   = nameEl?.value.trim();
+  if (!name) { if(errEl) errEl.textContent='Entrez votre nom.'; return; }
+  if (errEl) errEl.textContent = '';
+  nameEl.disabled = true;
+
   try {
     let session;
+    const thr = new Date(Date.now()-STALE_MS).toISOString();
 
-    // Step 1: Check savedId — reconnect to active game, or free up the old slot
-    if (savedId) {
-      const {data:ret}=await sb.from('players').select('*').eq('id',savedId).single();
-      if (ret) {
-        const {data:liveSess}=await sb.from('game_sessions').select('*').eq('id',ret.session_id).single();
-        const isLive=liveSess&&ret.is_active&&liveSess.status==='playing';
-        if (isLive) {
-          // Reconnect to ongoing game
-          await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',ret.id);
-          state.myPlayer={...ret}; state.session=liveSess;
-          document.getElementById('joinOverlay').classList.remove('show');
-          await loadGameState(); startHeartbeat(); subscribeRealtime(); return;
-        }
-        // Not a live game — free up the old player slot so name/count are correct
-        if (ret.is_active) await sb.from('players').update({is_active:false}).eq('id',savedId);
-      }
-      localStorage.removeItem(`ludo_player_${TABLE_ID}`);
-      localStorage.removeItem(`ludo_name_${TABLE_ID}`);
-    }
-
-    // Step 2: Find an existing 'waiting' session to join
-    const {data:existing}=await sb.from('game_sessions').select('*')
-      .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting')
-      .order('created_at',{ascending:false}).limit(1).single();
-
-    if (existing) {
-      const thr=new Date(Date.now()-STALE_MS).toISOString();
-      const {count}=await sb.from('players').select('*',{count:'exact',head:true})
+    if (_joinMode === 'join') {
+      // Find existing waiting session on this table
+      const {data:existing} = await sb.from('game_sessions').select('*')
+        .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting')
+        .order('created_at',{ascending:false}).limit(1).single();
+      if (!existing) { if(errEl) errEl.textContent='Aucune session en attente sur cette table.'; nameEl.disabled=false; return; }
+      const {count} = await sb.from('players').select('*',{count:'exact',head:true})
         .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',thr);
-      if((count||0)===0){
-        await sb.from('players').update({is_active:false}).eq('session_id',existing.id).eq('is_active',true);
-        await sb.from('game_sessions').update({status:'finished'}).eq('id',existing.id);
-      } else { session=existing; }
-    }
-    if (!session) {
-      const {data:ns,error}=await sb.from('game_sessions').insert({
+      if ((count||0) >= MAX_PLAYERS) { if(errEl) errEl.textContent='Table complète.'; nameEl.disabled=false; return; }
+      session = existing;
+    } else {
+      // Create new session on this table — finish any stale waiting session first
+      const {data:stale} = await sb.from('game_sessions').select('id')
+        .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting')
+        .order('created_at',{ascending:false}).limit(1).single();
+      if (stale) {
+        await sb.from('players').update({is_active:false}).eq('session_id',stale.id).eq('is_active',true);
+        await sb.from('game_sessions').update({status:'finished'}).eq('id',stale.id);
+      }
+      const {data:ns,error:nsErr} = await sb.from('game_sessions').insert({
         game_type:'ludo',table_id:TABLE_ID,status:'waiting',
         game_data:{tokens:{},phase:'rolling',dice:null,init_rolls:{},play_order:[]}
       }).select().single();
-      if(error) throw error;
-      session=ns;
+      if (nsErr) throw nsErr;
+      session = ns;
     }
 
-    const {data:allP}=await sb.from('players').select('*').eq('session_id',session.id);
-    const active=allP?.filter(p=>p.is_active)||[];
-    if(active.find(p=>p.name.toLowerCase()===name.toLowerCase())){err.textContent='Nom déjà pris dans cette session.';return;}
-    if(active.length>=MAX_PLAYERS){
-      err.textContent=`Table complète (${MAX_PLAYERS}/${MAX_PLAYERS}).`;
-      await showOtherTables();
-      return;
+    // Check name collision
+    const {data:allP} = await sb.from('players').select('*').eq('session_id',session.id);
+    const active = allP?.filter(p=>p.is_active) || [];
+    if (active.find(p=>p.name.toLowerCase()===name.toLowerCase())) {
+      if(errEl) errEl.textContent='Nom déjà pris dans cette session.';
+      nameEl.disabled=false; return;
     }
 
-    const to=allP?.length||0;
-    const pi=active.length%MAX_PLAYERS;
-    const {data:player,error:pErr}=await sb.from('players').insert({
-      session_id:session.id,name,color:SETUPS[pi].hex,turn_order:to,
-      position:0,score:0,last_seen:new Date().toISOString()
+    const pi = active.length % MAX_PLAYERS;
+    const {data:player,error:pErr} = await sb.from('players').insert({
+      session_id:session.id, name, color:SETUPS[pi].hex,
+      turn_order: allP?.length||0, position:0, score:0,
+      last_seen:new Date().toISOString()
     }).select().single();
-    if(pErr) throw pErr;
+    if (pErr) throw pErr;
 
-    localStorage.setItem(`ludo_player_${TABLE_ID}`,player.id);
-    localStorage.setItem(`ludo_name_${TABLE_ID}`,name);
-    state.myPlayer=player; state.session=session;
-    document.getElementById('joinOverlay').classList.remove('show');
+    localStorage.setItem(`ludo_player_${TABLE_ID}`, player.id);
+    state.myPlayer = player; state.session = session;
+    joinOverlayHide();
     await loadGameState(); startHeartbeat(); subscribeRealtime();
     addLog(`<span>${name}</span> a rejoint`);
-  } catch(e){err.textContent='Erreur: '+e.message;}
+  } catch(e) {
+    if(errEl) errEl.textContent = 'Erreur: '+e.message;
+    document.getElementById('nameInput')?.removeAttribute('disabled');
+  }
 }
-document.getElementById('nameInput').addEventListener('keypress',e=>{if(e.key==='Enter')joinGame();});
 
 // ============================================================
 // LOAD STATE
@@ -916,9 +965,32 @@ function addLog(msg){
 // BOOT
 // ============================================================
 buildBoard();
-document.getElementById('joinTableNum').textContent=TABLE_ID.split('-').pop();
-const sn=localStorage.getItem(`ludo_name_${TABLE_ID}`);
-if(sn) document.getElementById('nameInput').value=sn;
+
+(async function boot() {
+  // Try to reconnect to an active 'playing' game
+  const savedId = localStorage.getItem(`ludo_player_${TABLE_ID}`);
+  if (savedId) {
+    const {data:ret} = await sb.from('players').select('*').eq('id',savedId).single();
+    if (ret && ret.is_active) {
+      const {data:liveSess} = await sb.from('game_sessions').select('*').eq('id',ret.session_id).single();
+      if (liveSess && liveSess.status === 'playing') {
+        await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',ret.id);
+        state.myPlayer = ret; state.session = liveSess;
+        await loadGameState(); startHeartbeat(); subscribeRealtime();
+        return; // skip join modal entirely
+      }
+    }
+    // Stale saved player — mark inactive and clear
+    if (ret && ret.is_active) await sb.from('players').update({is_active:false}).eq('id',savedId);
+    localStorage.removeItem(`ludo_player_${TABLE_ID}`);
+  }
+
+  // Show join modal
+  const autoJoin = new URLSearchParams(location.search).has('join');
+  if (autoJoin) { _joinMode = 'join'; renderJoinStep('list'); }
+  else renderJoinStep('choose');
+  joinOverlayShow();
+})();
 </script>
 </body>
 </html>
