@@ -243,6 +243,38 @@ function isHost() {
   return state.myPlayer.turn_order === minOrder;
 }
 
+const HEARTBEAT_MS = 15000;
+const STALE_MS     = 45000;
+let heartbeatInterval = null;
+
+function startHeartbeat() {
+  stopHeartbeat();
+  heartbeatInterval = setInterval(async () => {
+    if (state.myPlayer) await sb.from('players').update({ last_seen: new Date().toISOString() }).eq('id', state.myPlayer.id);
+  }, HEARTBEAT_MS);
+}
+function stopHeartbeat() {
+  if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
+}
+async function cleanStalePlayers() {
+  const threshold = new Date(Date.now() - STALE_MS).toISOString();
+  const stale = state.players.filter(p => p.is_active && p.last_seen && p.last_seen < threshold);
+  if (!stale.length) return;
+  await sb.from('players').update({ is_active: false }).in('id', stale.map(p => p.id));
+  stale.forEach(p => { p.is_active = false; });
+}
+window.addEventListener('beforeunload', () => {
+  stopHeartbeat();
+  if (state.myPlayer) {
+    fetch(`${SUPABASE_URL}/rest/v1/players?id=eq.${state.myPlayer.id}`, {
+      method: 'PATCH', keepalive: true,
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ is_active: false })
+    });
+  }
+});
+
 let revealTimer = null;
 function startRevealCountdown() {
   clearRevealTimer();
@@ -274,9 +306,11 @@ async function joinGame() {
       .order('created_at', { ascending: false }).limit(1).single();
 
     if (existing) {
+      const threshold = new Date(Date.now() - STALE_MS).toISOString();
       const { count } = await sb.from('players').select('*', { count: 'exact', head: true })
-        .eq('session_id', existing.id).eq('is_active', true);
+        .eq('session_id', existing.id).eq('is_active', true).gte('last_seen', threshold);
       if ((count || 0) === 0) {
+        await sb.from('players').update({ is_active: false }).eq('session_id', existing.id).eq('is_active', true);
         await sb.from('game_sessions').update({ status: 'finished' }).eq('id', existing.id);
       } else {
         session = existing;
@@ -293,9 +327,10 @@ async function joinGame() {
     if (savedId && savedName === name) {
       const { data: ret } = await sb.from('players').select('*').eq('id', savedId).single();
       if (ret && ret.session_id === session.id) {
-        state.myPlayer = ret; state.session = session;
+        await sb.from('players').update({ is_active: true, last_seen: new Date().toISOString() }).eq('id', ret.id);
+        state.myPlayer = { ...ret, is_active: true }; state.session = session;
         document.getElementById('joinOverlay').classList.remove('show');
-        await loadGameState(); subscribeRealtime(); return;
+        await loadGameState(); startHeartbeat(); subscribeRealtime(); return;
       }
     }
 
@@ -305,14 +340,15 @@ async function joinGame() {
 
     const to = allP?.length || 0;
     const { data: player } = await sb.from('players').insert({
-      session_id: session.id, name, color: PLAYER_COLORS[to % 6], turn_order: to, score: 0
+      session_id: session.id, name, color: PLAYER_COLORS[to % 6], turn_order: to, score: 0,
+      last_seen: new Date().toISOString()
     }).select().single();
 
     localStorage.setItem('mc_player', player.id);
     localStorage.setItem('mc_name', name);
     state.myPlayer = player; state.session = session;
     document.getElementById('joinOverlay').classList.remove('show');
-    await loadGameState(); subscribeRealtime();
+    await loadGameState(); startHeartbeat(); subscribeRealtime();
   } catch(e) { err.textContent = 'Erreur: ' + e.message; }
 }
 document.getElementById('nameInput').addEventListener('keypress', e => { if(e.key==='Enter') joinGame(); });
@@ -329,6 +365,7 @@ async function loadGameState() {
     const me = players?.find(p => p.id === state.myPlayer.id);
     if (me) state.myPlayer = me;
   }
+  await cleanStalePlayers();
   await fixStaleSession();
   renderAll();
 }
@@ -582,6 +619,7 @@ async function finishGame() {
 }
 
 async function leaveGame() {
+  stopHeartbeat();
   if (state.myPlayer) await sb.from('players').update({ is_active: false }).eq('id', state.myPlayer.id);
   window.location.href = 'index.html';
 }
