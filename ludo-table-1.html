@@ -361,9 +361,11 @@ function renderTokens(){
       const rel=tok.rel??-1;
       if(rel>=59) return;
       const pos=tokenPx(pi,ti,rel);
-      // Group only same-cell tokens (same absolute track position or same home spot)
-      const absPos=rel>=0&&rel<=53?(rel+SETUPS[pi].offset)%54:`${pi},${rel}`;
-      const key=String(absPos);
+      // Grouping key: only outer-track tokens can share a cell (opponents landing same spot)
+      // Home spots, home stretch, and finish are always unique per token
+      let key;
+      if(rel>=0&&rel<=53) key=String((rel+SETUPS[pi].offset)%54); // absolute track cell
+      else key=`${pi}_${ti}_${rel}`; // unique per token for home/stretch/finish
       if(!byKey[key]) byKey[key]=[];
       byKey[key].push({p,pi,ti,rel,pos});
     });
