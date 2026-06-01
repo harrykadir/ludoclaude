@@ -18,7 +18,9 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 
 .main { display:grid; grid-template-columns:1fr 310px; gap:16px; padding:16px; max-width:1400px; margin:0 auto; }
 .board-wrap { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:18px; padding:12px; }
-#board-svg { width:100%; height:auto; display:block; }
+.board-container { position:relative; width:100%; }
+#boardImg { width:100%; height:auto; display:block; border-radius:8px; }
+#tokenCanvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
 
 .sidebar { display:flex; flex-direction:column; gap:12px; }
 .panel { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:15px; }
@@ -141,15 +143,10 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 
 <div class="main">
   <div class="board-wrap">
-    <svg id="board-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-      <rect width="600" height="600" fill="#0e0c2a" rx="12"/>
-      <g id="g-hex-bg"></g>
-      <g id="g-home-stretch"></g>
-      <g id="g-track"></g>
-      <g id="g-home-zones"></g>
-      <g id="g-center"></g>
-      <g id="g-tokens"></g>
-    </svg>
+    <div class="board-container">
+      <img id="boardImg" src="board.svg" alt="Plateau Ludo 6 joueurs">
+      <canvas id="tokenCanvas"></canvas>
+    </div>
   </div>
   <div class="sidebar">
     <div class="panel"><div class="panel-title">État</div><div class="status-bar" id="statusBar">En attente…</div></div>
@@ -181,241 +178,133 @@ const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 const MAX_PLAYERS = 6;
 
 // ============================================================
-// BOARD GEOMETRY — Hexagonal 6-player Ludo
+// BOARD GEOMETRY — calibrated on actual SVG (1032.98 × 1146.28)
 // ============================================================
-const CX=300, CY=300;
-const R_HEX=200;    // hex vertex radius (outer track ring)
-const R_TIP=272;    // home triangle tip radius
-const CS=18;        // track cell square half-size
-const N_SIDE=9;     // cells per side (54 total)
-const N_HS=5;       // home stretch cells per player
+const SVG_W = 1032.98, SVG_H = 1146.28;
+const BC_X = 512, BC_Y = 571.5; // board center in SVG px
 
-// 6 players, clockwise from top (matching reference image)
-// angle: degrees clockwise from top (12 o'clock)
+// 6 player slots; angle = home-stretch direction (deg CW from top)
 const SETUPS = [
-  {name:'Jaune', hex:'#f1c40f', angle:0  , offset:0 },  // top
-  {name:'Orange',hex:'#e67e22', angle:60 , offset:9 },  // top-right
-  {name:'Violet',hex:'#9b59b6', angle:120, offset:18},  // bottom-right
-  {name:'Bleu',  hex:'#3498db', angle:180, offset:27},  // bottom
-  {name:'Rouge', hex:'#e74c3c', angle:240, offset:36},  // bottom-left
-  {name:'Vert',  hex:'#27ae60', angle:300, offset:45},  // top-left
+  {name:'Bleu',   hex:'#3498db', angle:-90,  offset:0 },
+  {name:'Jaune',  hex:'#f1c40f', angle:-30,  offset:9 },
+  {name:'Vert',   hex:'#27ae60', angle: 30,  offset:18},
+  {name:'Rouge',  hex:'#e74c3c', angle: 90,  offset:27},
+  {name:'Orange', hex:'#e67e22', angle:150,  offset:36},
+  {name:'Violet', hex:'#9b59b6', angle:-150, offset:45},
 ];
-const N_TOTAL = N_SIDE * 6; // 54
+const N_HS = 5, N_TOTAL = 54;
+const TRACK_R  = 415;                         // outer track radius (SVG px)
+const HS_DISTS = [341, 275, 210, 143, 77];    // rel=54→341, rel=58→77
+const HZ_DIST  = 466, HZ_DELTA = 25, HZ_SP = 38; // home-zone cluster
 
-// Pixel from clockwise angle and radius
-function px(angleDeg, r) {
-  const a = angleDeg * Math.PI / 180;
-  return {x: CX + r * Math.sin(a), y: CY - r * Math.cos(a)};
-}
-
-// Hex vertex for player pi
-function vertex(pi) { return px(SETUPS[pi].angle, R_HEX); }
-
-// Track cell pixel: cell k on side s, interpolated along hex side
-function trackPx(absK) {
-  const s = Math.floor(absK / N_SIDE);
-  const t = (absK % N_SIDE + 0.5) / N_SIDE;
-  const V0 = vertex(s), V1 = vertex((s+1)%6);
-  return {x: V0.x + t*(V1.x-V0.x), y: V0.y + t*(V1.y-V0.y)};
-}
-
-// Home stretch cell pi, hc (0=outer, 4=inner/finish)
-function hsPx(pi, hc) {
-  const rOuter = R_HEX - 16;
-  const rInner = 65;
-  const r = rOuter - hc * (rOuter - rInner) / (N_HS - 1);
-  return px(SETUPS[pi].angle, r);
-}
-
-// Home zone token spots (4 spots in the home triangle)
-function homeSpotPx(pi, ti) {
-  const c = px(SETUPS[pi].angle, R_HEX + 52);
-  const r = 22; // spread
-  const spots = [[-r,-r],[r,-r],[-r,r],[r,r]];
-  return {x: c.x + spots[ti][0], y: c.y + spots[ti][1]};
-}
-
-// Token pixel position: rel=-1 home, 0-53 track, 54-58 HS, >=59 done
-function tokenPx(pi, ti, rel) {
-  if (rel < 0) return homeSpotPx(pi, ti);
-  if (rel <= 53) return trackPx((rel + SETUPS[pi].offset) % N_TOTAL);
-  if (rel <= 58) return hsPx(pi, rel - 54);
-  return px(SETUPS[pi].angle, 50);
-}
-
-// Is this absolute track cell a safe cell?
 const SAFE_ABS = new Set([0, 9, 18, 27, 36, 45]);
 function isSafe(absK) { return SAFE_ABS.has(absK); }
 
-// ============================================================
-// SVG HELPERS
-// ============================================================
-function svgEl(tag, attrs, text) {
-  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, String(v));
-  if (text !== undefined) el.textContent = text;
-  return el;
+function svgDir(angleDeg, dist) {
+  const r = angleDeg * Math.PI / 180;
+  return [BC_X + dist * Math.sin(r), BC_Y - dist * Math.cos(r)];
+}
+
+function homeZoneSvgPos(pi, ti) {
+  const [cx, cy] = svgDir(SETUPS[pi].angle + HZ_DELTA, HZ_DIST);
+  const dxArr = [-HZ_SP, HZ_SP, -HZ_SP, HZ_SP];
+  const dyArr = [-HZ_SP, -HZ_SP, HZ_SP,  HZ_SP];
+  return [cx + dxArr[ti], cy + dyArr[ti]];
+}
+
+function trackSvgPos(absK) {
+  return svgDir(-90 + absK * (360 / 54), TRACK_R);
+}
+
+function tokenSvgPos(pi, ti, rel) {
+  if (rel < 0)  return homeZoneSvgPos(pi, ti);
+  if (rel <= 53) return trackSvgPos((rel + SETUPS[pi].offset) % N_TOTAL);
+  if (rel <= 58) return svgDir(SETUPS[pi].angle, HS_DISTS[rel - 54]);
+  return svgDir(SETUPS[pi].angle, 35); // finished near center
 }
 
 // ============================================================
-// BOARD DRAWING
+// TOKEN RENDERING (canvas overlay on real SVG board image)
 // ============================================================
-function buildBoard() {
-  drawHexBackground();
-  drawHomeStretches();
-  drawTrackCells();
-  drawHomeZones();
-  drawCenter();
+function resizeCanvas() {
+  const canvas = document.getElementById('tokenCanvas');
+  const img = document.getElementById('boardImg');
+  const rect = img.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = Math.round(rect.width  * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  renderTokens();
 }
 
-function drawHexBackground() {
-  const g = document.getElementById('g-hex-bg');
-  // Outer hexagon filled shape
-  const vpts = [0,1,2,3,4,5].map(i => vertex(i));
-  const poly = vpts.map(v=>`${v.x},${v.y}`).join(' ');
-  g.appendChild(svgEl('polygon',{points:poly, fill:'#13112e', stroke:'rgba(255,255,255,0.08)', 'stroke-width':1}));
+function svgToCanvas(svgX, svgY) {
+  const c = document.getElementById('tokenCanvas');
+  return [svgX * c.width / SVG_W, svgY * c.height / SVG_H];
 }
 
-function drawTrackCells() {
-  const g = document.getElementById('g-track');
-  g.innerHTML = '';
-  for (let k=0; k<N_TOTAL; k++) {
-    const p = trackPx(k);
-    const s = Math.floor(k / N_SIDE);
-    const posInSide = k % N_SIDE;
-
-    // Color: last 5 cells of each side = NEXT player's approach color
-    const isApproach = posInSide >= N_SIDE - 5;
-    const nextPi = (s + 1) % 6;
-    const fillColor = isApproach ? SETUPS[nextPi].hex : 'rgba(255,255,255,0.07)';
-    const strokeColor = isApproach ? SETUPS[nextPi].hex : 'rgba(255,255,255,0.18)';
-    const isEntry = (k === SETUPS[s].offset) || SAFE_ABS.has(k);
-    const isSafeCell = isSafe(k);
-
-    g.appendChild(svgEl('rect',{
-      x:p.x-CS, y:p.y-CS, width:CS*2, height:CS*2, rx:3,
-      fill: isSafeCell ? SETUPS[s].hex+'33' : fillColor,
-      stroke: isSafeCell ? SETUPS[s].hex : strokeColor,
-      'stroke-width': isSafeCell ? 1.8 : 0.8,
-      id:`tc${k}`
-    }));
-
-    if (isSafeCell) {
-      g.appendChild(svgEl('text',{x:p.x,y:p.y+5,'text-anchor':'middle',fill:'gold','font-size':11,'font-family':'Inter'},'★'));
-    }
-  }
-}
-
-function drawHomeStretches() {
-  const g = document.getElementById('g-home-stretch');
-  g.innerHTML = '';
-  SETUPS.forEach((s,pi) => {
-    for (let hc=0; hc<N_HS; hc++) {
-      const p = hsPx(pi, hc);
-      const isLast = hc === N_HS - 1;
-      g.appendChild(svgEl('rect',{
-        x:p.x-CS+1, y:p.y-CS+1, width:(CS-1)*2, height:(CS-1)*2, rx:3,
-        fill: isLast ? s.hex+'bb' : s.hex+'44',
-        stroke: s.hex, 'stroke-width': isLast ? 2 : 1.2,
-        id:`hs${pi}_${hc}`
-      }));
-      if (isLast) g.appendChild(svgEl('text',{x:p.x,y:p.y+5,'text-anchor':'middle',fill:'#fff','font-size':11,'font-family':'Inter'},'✓'));
-    }
-  });
-}
-
-function drawHomeZones() {
-  const g = document.getElementById('g-home-zones');
-  g.innerHTML = '';
-  const HALF_W_DEG = 26; // half-angle of home triangle base
-
-  SETUPS.forEach((s,pi) => {
-    const tip = px(s.angle, R_TIP);
-    const bL = px(s.angle - HALF_W_DEG, R_HEX);
-    const bR = px(s.angle + HALF_W_DEG, R_HEX);
-    const pts = `${tip.x},${tip.y} ${bL.x},${bL.y} ${bR.x},${bR.y}`;
-
-    // Background triangle
-    g.appendChild(svgEl('polygon',{points:pts, fill:s.hex, opacity:0.2}));
-    g.appendChild(svgEl('polygon',{points:pts, fill:'none', stroke:s.hex, 'stroke-width':2, opacity:0.7}));
-
-    // Inner white circle with token spots
-    const ctr = px(s.angle, R_HEX + 52);
-    g.appendChild(svgEl('circle',{cx:ctr.x,cy:ctr.y,r:36, fill:'rgba(255,255,255,0.06)', stroke:s.hex,'stroke-width':1.5}));
-
-    // 4 token spots
-    for (let ti=0;ti<4;ti++) {
-      const sp = homeSpotPx(pi, ti);
-      g.appendChild(svgEl('circle',{cx:sp.x,cy:sp.y,r:13, fill:s.hex, opacity:0.35, stroke:'rgba(255,255,255,0.5)','stroke-width':1}));
-    }
-
-    // Player label near tip
-    const lp = px(s.angle, R_TIP + 14);
-    g.appendChild(svgEl('text',{x:lp.x,y:lp.y+4,'text-anchor':'middle',fill:s.hex,'font-size':11,'font-weight':'bold','font-family':'Inter'},s.name));
-  });
-}
-
-function drawCenter() {
-  const g = document.getElementById('g-center');
-  g.innerHTML = '';
-  const R_C = 56;
-
-  // 6 colored triangles meeting at center
-  SETUPS.forEach((s,pi) => {
-    const a1 = (s.angle - 30) * Math.PI / 180;
-    const a2 = (s.angle + 30) * Math.PI / 180;
-    const p1 = {x: CX + R_C*Math.sin(a1), y: CY - R_C*Math.cos(a1)};
-    const p2 = {x: CX + R_C*Math.sin(a2), y: CY - R_C*Math.cos(a2)};
-    g.appendChild(svgEl('polygon',{
-      points:`${CX},${CY} ${p1.x},${p1.y} ${p2.x},${p2.y}`,
-      fill:s.hex, opacity:0.5
-    }));
-  });
-
-  // Center border circle
-  g.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_C, fill:'none', stroke:'rgba(255,255,255,0.15)','stroke-width':1.5}));
-}
-
-// ============================================================
-// TOKEN RENDERING
-// ============================================================
 function renderTokens() {
-  const g = document.getElementById('g-tokens');
-  g.innerHTML = '';
+  const canvas = document.getElementById('tokenCanvas');
+  if (!canvas.width) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!state.session) return;
-  const tokens = state.session.game_data?.tokens || {};
 
-  // Group tokens at same pixel to handle stacking
+  const tokens = state.session.game_data?.tokens || {};
+  const gd = state.session?.game_data || {};
+  const R = Math.round(canvas.width / SVG_W * 22); // token radius
+
+  // Group tokens sharing same SVG cell
   const byPos = {};
-  state.players.filter(p=>p.is_active).forEach(p => {
+  state.players.filter(p => p.is_active).forEach(p => {
     const pi = boardIndex(p.id);
     if (pi < 0) return;
     const ptoks = tokens[p.id] || [{rel:-1},{rel:-1},{rel:-1},{rel:-1}];
-    ptoks.forEach((tok,ti) => {
+    ptoks.forEach((tok, ti) => {
       const rel = tok.rel ?? -1;
       if (rel >= 59) return;
-      const pos = tokenPx(pi, ti, rel);
-      const key = `${Math.round(pos.x)},${Math.round(pos.y)}`;
+      const [sx, sy] = tokenSvgPos(pi, ti, rel);
+      const key = `${Math.round(sx/8)*8},${Math.round(sy/8)*8}`;
       if (!byPos[key]) byPos[key] = [];
-      byPos[key].push({p, pi, ti, rel, pos});
+      byPos[key].push({p, pi, ti, rel, sx, sy});
     });
   });
 
-  const offsets = [[0,0],[-9,0],[9,0],[0,-9],[0,9],[6,6]];
-  Object.values(byPos).forEach(group => {
-    group.forEach(({p,pi,ti,rel,pos},idx) => {
-      const [ox,oy] = offsets[idx]||[0,0];
-      const cx=pos.x+ox, cy=pos.y+oy;
-      const s = SETUPS[pi];
-      const gd = state.session?.game_data||{};
-      const isSel = gd.sel_player===p.id && gd.sel_token===ti;
-      const isMe = p.id === state.myPlayer?.id;
+  const off = [[0,0],[-R*1.3,0],[R*1.3,0],[0,-R*1.3],[0,R*1.3],[R,-R]];
 
-      g.appendChild(svgEl('circle',{cx,cy,r:10,fill:s.hex,
-        stroke:isSel?'gold':isMe?'#fff':'rgba(255,255,255,0.7)',
-        'stroke-width':isSel?3:isMe?2:1.2,opacity:0.95}));
-      g.appendChild(svgEl('text',{x:cx,y:cy+4,'text-anchor':'middle',fill:'#fff',
-        'font-size':8,'font-weight':'bold','font-family':'Inter'},String(ti+1)));
+  Object.values(byPos).forEach(group => {
+    group.forEach(({p, pi, ti, rel, sx, sy}, idx) => {
+      const s = SETUPS[pi];
+      const [bx, by] = svgToCanvas(sx, sy);
+      const [ox, oy] = off[Math.min(idx, off.length-1)];
+      const cx = bx + ox, cy = by + oy;
+      const isSel = gd.sel_player === p.id && gd.sel_token === ti;
+      const isMe  = p.id === state.myPlayer?.id;
+
+      // Drop shadow
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.55)';
+      ctx.shadowBlur  = R * 0.6;
+      ctx.shadowOffsetY = R * 0.25;
+
+      // Circle body
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fillStyle = s.hex;
+      ctx.fill();
+      ctx.restore();
+
+      // Stroke
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.strokeStyle = isSel ? 'gold' : isMe ? '#fff' : 'rgba(255,255,255,0.65)';
+      ctx.lineWidth   = isSel ? R * 0.35 : isMe ? R * 0.22 : R * 0.13;
+      ctx.stroke();
+
+      // Number label
+      ctx.fillStyle    = '#fff';
+      ctx.font         = `bold ${Math.round(R * 0.9)}px Inter,sans-serif`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(ti + 1), cx, cy + R * 0.05);
     });
   });
 }
@@ -895,7 +784,11 @@ function addLog(msg){
 // ============================================================
 // BOOT
 // ============================================================
-buildBoard();
+const boardImg = document.getElementById('boardImg');
+boardImg.onload = resizeCanvas;
+if (boardImg.complete) resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
 const sn=localStorage.getItem(`ludo_name_${TABLE_ID}`);
 if(sn) document.getElementById('nameInput').value=sn;
 </script>
