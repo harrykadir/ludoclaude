@@ -87,7 +87,7 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 <!-- JOIN -->
 <div class="overlay show" id="joinOverlay">
   <div class="modal">
-    <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:5px">🎲 Rejoindre la table</h2>
+    <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:5px">🎲 Rejoindre la table <span id="joinTableNum">1</span></h2>
     <p style="color:rgba(255,255,255,0.45);margin-bottom:18px;font-size:0.88rem">2 à 6 joueurs — 4 pions chacun</p>
     <div class="input-group" style="margin-bottom:12px">
       <label>Votre nom</label>
@@ -95,6 +95,10 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
     </div>
     <div class="error-msg" id="joinError"></div>
     <button class="btn btn-primary" style="width:100%;padding:12px;margin-top:6px" onclick="joinGame()">Rejoindre →</button>
+    <div id="otherTablesSection" style="display:none;margin-top:18px;border-top:1px solid rgba(255,255,255,0.1);padding-top:14px">
+      <p style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:10px">Cette table est complète. Rejoindre une autre :</p>
+      <div id="otherTablesList" style="display:flex;flex-direction:column;gap:7px"></div>
+    </div>
   </div>
 </div>
 
@@ -453,6 +457,32 @@ window.addEventListener('beforeunload',()=>{
 // ============================================================
 // JOIN
 // ============================================================
+async function showOtherTables() {
+  const section=document.getElementById('otherTablesSection');
+  const list=document.getElementById('otherTablesList');
+  section.style.display='block';
+  list.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:0.8rem">Chargement…</div>';
+  const allNums=[1,2,3,4,5];
+  const currentNum=parseInt(TABLE_ID.split('-').pop());
+  const others=allNums.filter(n=>n!==currentNum);
+  const thr=new Date(Date.now()-STALE_MS).toISOString();
+  const rows=await Promise.all(others.map(async n=>{
+    const tid=`ludo-table-${n}`;
+    let count=0;
+    const {data:sess}=await sb.from('game_sessions').select('id,status').eq('table_id',tid).eq('game_type','ludo').neq('status','finished').order('created_at',{ascending:false}).limit(1).single();
+    if(sess){
+      const {count:c}=await sb.from('players').select('*',{count:'exact',head:true}).eq('session_id',sess.id).eq('is_active',true).gte('last_seen',thr);
+      count=c||0;
+    }
+    const full=count>=MAX_PLAYERS;
+    return `<a href="ludo-table-${n}.html" style="display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid ${full?'rgba(255,255,255,0.1)':'rgba(102,126,234,0.4)'};text-decoration:none;color:#fff;${full?'opacity:0.45;pointer-events:none':''}">
+      <span style="font-weight:600;font-size:0.9rem">Table ${n}</span>
+      <span style="font-size:0.8rem;color:${full?'#e74c3c':count>0?'#f1c40f':'#2ecc71'}">${count}/${MAX_PLAYERS} joueurs${full?' — Complète':''}</span>
+    </a>`;
+  }));
+  list.innerHTML=rows.join('');
+}
+
 async function joinGame() {
   const name=document.getElementById('nameInput').value.trim();
   const err=document.getElementById('joinError');
@@ -467,7 +497,7 @@ async function joinGame() {
       const {data:ret}=await sb.from('players').select('*').eq('id',savedId).single();
       if (ret) {
         const {data:liveSess}=await sb.from('game_sessions').select('*').eq('id',ret.session_id).single();
-        const isLive=liveSess&&ret.is_active&&(liveSess.status==='playing'||liveSess.status==='init_rolling');
+        const isLive=liveSess&&ret.is_active&&liveSess.status==='playing';
         if (isLive) {
           // Reconnect to ongoing game
           await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',ret.id);
@@ -507,8 +537,12 @@ async function joinGame() {
 
     const {data:allP}=await sb.from('players').select('*').eq('session_id',session.id);
     const active=allP?.filter(p=>p.is_active)||[];
-    if(active.find(p=>p.name.toLowerCase()===name.toLowerCase())){err.textContent='Nom déjà pris.';return;}
-    if(active.length>=MAX_PLAYERS){err.textContent=`Table complète (${MAX_PLAYERS}/${MAX_PLAYERS}).`;return;}
+    if(active.find(p=>p.name.toLowerCase()===name.toLowerCase())){err.textContent='Nom déjà pris dans cette session.';return;}
+    if(active.length>=MAX_PLAYERS){
+      err.textContent=`Table complète (${MAX_PLAYERS}/${MAX_PLAYERS}).`;
+      await showOtherTables();
+      return;
+    }
 
     const to=allP?.length||0;
     const pi=active.length%MAX_PLAYERS;
@@ -577,22 +611,23 @@ function updateStatus() {
   const bar=document.getElementById('statusBar');
   const sess=state.session;
   if(!sess){bar.textContent='En attente…';return;}
+  bar.style.color='#667eea';
   if(sess.status==='waiting'){
     const cnt=state.players.filter(p=>p.is_active).length;
     bar.innerHTML=cnt<2?`${cnt}/6 — Minimum 2 joueurs`:`${cnt} joueurs prêts !`;
     if(cnt>=2&&isHost()) bar.innerHTML+=` <button class="btn btn-primary" style="margin-left:8px;padding:4px 10px;font-size:0.75rem" onclick="startInitRoll()">▶ Démarrer</button>`;
-  } else if(sess.status==='init_rolling'){
+  } else if(isInitRolling()){
     bar.textContent='🎲 Tirage de l\'ordre…';
   } else if(sess.status==='playing'){
     const curr=state.players.find(p=>p.id===sess.current_player_id);
     if(isMyTurn()){bar.textContent='🎲 Lancez le dé !';bar.style.color='#2ecc71';}
-    else{bar.textContent=`⏳ Tour de ${curr?.name||'…'}`;bar.style.color='#667eea';}
+    else{bar.textContent=`⏳ Tour de ${curr?.name||'…'}`;}
   }
 }
 
 function updateRollBtn() {
   const gd=state.session?.game_data||{};
-  document.getElementById('rollBtn').disabled=!(isMyTurn()&&gd.phase==='rolling');
+  document.getElementById('rollBtn').disabled=!(isMyTurn()&&gd.phase==='rolling'&&!isInitRolling());
 }
 
 // ============================================================
@@ -603,16 +638,20 @@ async function startInitRoll() {
   const initTokens={};
   active.forEach(p=>{initTokens[p.id]=[{rel:-1},{rel:-1},{rel:-1},{rel:-1}];});
   const {error}=await sb.from('game_sessions').update({
-    status:'init_rolling',
-    game_data:{tokens:initTokens,phase:'rolling',init_rolls:{},play_order:[]}
+    status:'playing',
+    game_data:{tokens:initTokens,phase:'init_rolling',init_rolls:{},play_order:[]}
   }).eq('id',state.session.id);
   if(error) addLog('Erreur démarrage: '+error.message);
+}
+
+function isInitRolling() {
+  return state.session?.status==='playing' && state.session?.game_data?.phase==='init_rolling';
 }
 
 function updateInitRollUI() {
   const sess=state.session;
   const overlay=document.getElementById('initRollOverlay');
-  if(!sess||sess.status!=='init_rolling'){overlay.classList.remove('show');return;}
+  if(!isInitRolling()){overlay.classList.remove('show');return;}
   overlay.classList.add('show');
   const rolls=sess.game_data?.init_rolls||{};
   const myRoll=rolls[state.myPlayer?.id];
@@ -641,7 +680,7 @@ async function doInitRoll() {
     const sorted=[...active].sort((a,b)=>(rolls[b.id]-rolls[a.id])||a.turn_order-b.turn_order);
     const playOrder=sorted.map(p=>p.id);
     await sb.from('game_sessions').update({
-      status:'playing',current_player_id:playOrder[0],
+      current_player_id:playOrder[0],
       game_data:{...gd,init_rolls:rolls,play_order:playOrder,phase:'rolling',dice:null}
     }).eq('id',state.session.id);
     addLog(`Ordre: ${sorted.map(p=>`<span>${p.name}</span>(${rolls[p.id]})`).join(' → ')}`);
@@ -877,6 +916,7 @@ function addLog(msg){
 // BOOT
 // ============================================================
 buildBoard();
+document.getElementById('joinTableNum').textContent=TABLE_ID.split('-').pop();
 const sn=localStorage.getItem(`ludo_name_${TABLE_ID}`);
 if(sn) document.getElementById('nameInput').value=sn;
 </script>
