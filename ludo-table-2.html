@@ -16,40 +16,34 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 .btn-secondary { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; }
 .btn:disabled { opacity:0.35; cursor:not-allowed; transform:none !important; }
 
-.main { display:grid; grid-template-columns:1fr 320px; gap:18px; padding:18px; max-width:1400px; margin:0 auto; }
-.board-wrap { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:18px; padding:14px; }
+.main { display:grid; grid-template-columns:1fr 310px; gap:16px; padding:16px; max-width:1400px; margin:0 auto; }
+.board-wrap { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:18px; padding:12px; }
 #board-svg { width:100%; height:auto; display:block; }
 
 .sidebar { display:flex; flex-direction:column; gap:12px; }
-.panel { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:16px; }
-.panel-title { font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.45); margin-bottom:10px; }
-
-.status-bar { background:rgba(102,126,234,0.1); border:1px solid rgba(102,126,234,0.2); border-radius:10px; padding:9px 13px; font-size:0.86rem; color:#667eea; font-weight:500; text-align:center; min-height:38px; }
-
-.player-item { display:flex; align-items:center; gap:9px; padding:7px 9px; border-radius:9px; border:1px solid transparent; margin-bottom:5px; transition:all 0.3s; }
+.panel { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:15px; }
+.panel-title { font-size:0.77rem; font-weight:600; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.45); margin-bottom:10px; }
+.status-bar { background:rgba(102,126,234,0.1); border:1px solid rgba(102,126,234,0.2); border-radius:10px; padding:9px 13px; font-size:0.85rem; color:#667eea; font-weight:500; text-align:center; min-height:36px; }
+.player-item { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:9px; border:1px solid transparent; margin-bottom:5px; transition:all 0.3s; }
 .player-item.active { background:rgba(102,126,234,0.15); border-color:rgba(102,126,234,0.35); }
-.player-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
-.player-name { flex:1; font-size:0.88rem; font-weight:600; }
-.turn-badge { background:linear-gradient(135deg,#667eea,#764ba2); padding:2px 7px; border-radius:5px; font-size:0.66rem; font-weight:700; }
+.player-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.turn-badge { background:linear-gradient(135deg,#667eea,#764ba2); padding:2px 6px; border-radius:5px; font-size:0.65rem; font-weight:700; }
 .pion-mini { display:inline-flex; gap:2px; }
-.pm { width:8px; height:8px; border-radius:50%; border:1px solid rgba(255,255,255,0.4); }
-.pm.done { opacity:0.25; }
-
+.pm { width:8px; height:8px; border-radius:50%; border:1px solid rgba(255,255,255,0.3); }
+.pm.done { opacity:0.2; }
 .dice-area { text-align:center; }
-#dice-display { font-size:4rem; margin:6px 0; display:inline-block; filter:drop-shadow(0 3px 10px rgba(102,126,234,0.5)); }
+#dice-display { font-size:3.8rem; margin:5px 0; display:inline-block; filter:drop-shadow(0 3px 8px rgba(102,126,234,0.5)); }
 #dice-display.rolling { animation:roll 0.5s ease; }
-@keyframes roll { 0%,100%{transform:rotate(0)scale(1)} 50%{transform:rotate(25deg)scale(1.25)} }
+@keyframes roll { 0%,100%{transform:rotate(0)scale(1)} 50%{transform:rotate(22deg)scale(1.2)} }
 
 .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.82); backdrop-filter:blur(8px); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s; }
 .overlay.show { opacity:1; pointer-events:all; }
-.modal { background:linear-gradient(135deg,#1a1a3e,#2d1b69); border:1px solid rgba(255,255,255,0.15); border-radius:22px; padding:30px; max-width:540px; width:100%; transform:scale(0.92); transition:transform 0.3s; }
+.modal { background:linear-gradient(135deg,#1a1a3e,#2d1b69); border:1px solid rgba(255,255,255,0.15); border-radius:22px; padding:28px; max-width:520px; width:100%; transform:scale(0.92); transition:transform 0.3s; }
 .overlay.show .modal { transform:scale(1); }
-
 .input-group label { display:block; font-size:0.8rem; font-weight:600; color:rgba(255,255,255,0.55); margin-bottom:5px; }
 .input-group input { width:100%; padding:11px 13px; border-radius:9px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); color:#fff; font-family:'Inter',sans-serif; font-size:0.93rem; outline:none; }
 .input-group input:focus { border-color:#667eea; }
 .error-msg { color:#e74c3c; font-size:0.8rem; min-height:18px; margin-top:5px; }
-
 .q-level { display:inline-block; padding:3px 11px; border-radius:20px; font-size:0.72rem; font-weight:700; letter-spacing:1px; margin-bottom:10px; }
 .q-level.easy { background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
 .q-level.medium { background:rgba(243,156,18,0.2); color:#f39c12; border:1px solid rgba(243,156,18,0.3); }
@@ -65,19 +59,14 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 .q-result.show { display:block; }
 .q-result.good { background:rgba(46,204,113,0.15); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
 .q-result.bad { background:rgba(231,76,60,0.12); color:#e74c3c; border:1px solid rgba(231,76,60,0.25); }
-
-.token-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:10px; }
-.token-btn { padding:12px; border-radius:11px; border:2px solid; cursor:pointer; text-align:center; font-family:'Inter',sans-serif; font-weight:600; font-size:0.86rem; background:rgba(255,255,255,0.05); transition:all 0.2s; color:#fff; }
+.token-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.token-btn { padding:12px; border-radius:10px; border:2px solid; cursor:pointer; text-align:center; font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem; background:rgba(255,255,255,0.05); transition:all 0.2s; color:#fff; }
 .token-btn:hover { transform:translateY(-2px); }
-
-.log-area { max-height:130px; overflow-y:auto; }
-.log-item { font-size:0.78rem; color:rgba(255,255,255,0.52); padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.log-area { max-height:120px; overflow-y:auto; }
+.log-item { font-size:0.77rem; color:rgba(255,255,255,0.5); padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
 .log-item span { color:#667eea; font-weight:600; }
-
 .init-roll-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
-.init-roll-item { background:rgba(255,255,255,0.06); border-radius:10px; padding:12px; text-align:center; }
-.init-roll-val { font-size:1.8rem; margin:4px 0; }
-
+.init-roll-item { background:rgba(255,255,255,0.06); border-radius:10px; padding:10px; text-align:center; }
 @media(max-width:900px) { .main { grid-template-columns:1fr; } }
 </style>
 </head>
@@ -89,17 +78,14 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
     <div class="logo">🎲 LudoClaude</div>
   </div>
   <div style="font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.45)">Table <span id="tableNum">1</span></div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <span style="color:rgba(255,255,255,0.35);font-size:0.78rem">⚡ Temps réel</span>
-    <button class="btn btn-secondary" onclick="leaveGame()">Quitter</button>
-  </div>
+  <button class="btn btn-secondary" onclick="leaveGame()">Quitter</button>
 </header>
 
 <!-- JOIN -->
 <div class="overlay show" id="joinOverlay">
   <div class="modal">
     <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:5px">🎲 Rejoindre la table</h2>
-    <p style="color:rgba(255,255,255,0.45);margin-bottom:18px;font-size:0.88rem">Ludo Claude — 2 à 6 joueurs, 4 pions chacun</p>
+    <p style="color:rgba(255,255,255,0.45);margin-bottom:18px;font-size:0.88rem">2 à 6 joueurs — 4 pions chacun</p>
     <div class="input-group" style="margin-bottom:12px">
       <label>Votre nom</label>
       <input type="text" id="nameInput" placeholder="Ex: Alice" maxlength="16" autocomplete="off">
@@ -112,22 +98,21 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 <!-- INIT ROLL -->
 <div class="overlay" id="initRollOverlay">
   <div class="modal">
-    <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">🎲 Tirage de l'ordre de jeu</h3>
-    <p style="color:rgba(255,255,255,0.45);font-size:0.85rem;margin-bottom:14px">Chaque joueur lance le dé — le plus grand chiffre commence !</p>
+    <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">🎲 Qui commence ?</h3>
+    <p style="color:rgba(255,255,255,0.45);font-size:0.84rem;margin-bottom:12px">Chaque joueur lance le dé. Le plus grand chiffre commence, puis sens des aiguilles d'une montre.</p>
     <div class="init-roll-grid" id="initRollGrid"></div>
     <div style="margin-top:14px;text-align:center">
-      <button class="btn btn-primary" id="initRollBtn" style="padding:12px 32px" onclick="doInitRoll()">🎲 Lancer mon dé</button>
-      <div id="initRollStatus" style="margin-top:8px;color:rgba(255,255,255,0.45);font-size:0.82rem"></div>
+      <button class="btn btn-primary" id="initRollBtn" style="padding:11px 28px" onclick="doInitRoll()">🎲 Lancer mon dé</button>
+      <div id="initRollStatus" style="margin-top:8px;color:rgba(255,255,255,0.45);font-size:0.8rem"></div>
     </div>
   </div>
 </div>
 
-<!-- TOKEN SELECTION -->
+<!-- TOKEN SELECT -->
 <div class="overlay" id="tokenOverlay">
   <div class="modal">
     <div style="font-size:0.85rem;color:rgba(255,255,255,0.45);margin-bottom:3px">Dé : <strong id="tokenDice" style="color:#fff;font-size:1.1rem"></strong></div>
-    <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:5px">Quel pion déplacer ?</h3>
-    <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:2px" id="tokenDesc"></p>
+    <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:5px">Quel pion déplacer ?</h3>
     <div class="token-grid" id="tokenGrid"></div>
   </div>
 </div>
@@ -146,7 +131,7 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 <!-- GAME OVER -->
 <div class="overlay" id="gameOverOverlay">
   <div class="modal" style="text-align:center">
-    <div style="font-size:3.5rem">🏆</div>
+    <div style="font-size:3rem">🏆</div>
     <h2 style="font-size:1.7rem;font-weight:800;margin:10px 0 4px" id="winnerName">Victoire !</h2>
     <p style="color:rgba(255,255,255,0.45);margin-bottom:22px">a ramené ses 4 pions à la maison !</p>
     <button class="btn btn-primary" style="padding:11px 28px" onclick="resetGame()">Nouvelle partie</button>
@@ -156,21 +141,18 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 
 <div class="main">
   <div class="board-wrap">
-    <div style="font-size:0.95rem;font-weight:700;margin-bottom:10px">🎲 Table <span id="tableNum2">1</span> — 2 à 6 joueurs</div>
     <svg id="board-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-      <rect width="600" height="600" fill="#0e0c2a" rx="14"/>
-      <g id="board-bg"></g>
-      <g id="board-track"></g>
-      <g id="board-hs"></g>
-      <g id="board-tokens"></g>
+      <rect width="600" height="600" fill="#0e0c2a" rx="12"/>
+      <g id="g-hex-bg"></g>
+      <g id="g-home-stretch"></g>
+      <g id="g-track"></g>
+      <g id="g-home-zones"></g>
+      <g id="g-center"></g>
+      <g id="g-tokens"></g>
     </svg>
   </div>
-
   <div class="sidebar">
-    <div class="panel">
-      <div class="panel-title">État</div>
-      <div class="status-bar" id="statusBar">En attente…</div>
-    </div>
+    <div class="panel"><div class="panel-title">État</div><div class="status-bar" id="statusBar">En attente…</div></div>
     <div class="panel">
       <div class="panel-title">Joueurs <span style="color:#667eea" id="playerCount">(0/6)</span></div>
       <div id="playersList"></div>
@@ -182,10 +164,7 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
         <button class="btn btn-primary" id="rollBtn" style="width:100%;padding:12px" onclick="rollDice()" disabled>🎲 Lancer le dé</button>
       </div>
     </div>
-    <div class="panel">
-      <div class="panel-title">Journal</div>
-      <div class="log-area" id="logArea"></div>
-    </div>
+    <div class="panel"><div class="panel-title">Journal</div><div class="log-area" id="logArea"></div></div>
   </div>
 </div>
 
@@ -193,88 +172,80 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 <script src="config.js"></script>
 <script>
 // ============================================================
-// INIT
+// TABLE CONFIG
 // ============================================================
 const TABLE_ID = 'ludo-table-' + (location.pathname.match(/ludo-table-(\d)/)||['','1'])[1];
-const TABLE_NUM = TABLE_ID.split('-').pop();
-document.getElementById('tableNum').textContent = TABLE_NUM;
-document.getElementById('tableNum2').textContent = TABLE_NUM;
+document.getElementById('tableNum').textContent = TABLE_ID.split('-').pop();
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+const MAX_PLAYERS = 6;
 
 // ============================================================
-// BOARD GEOMETRY
+// BOARD GEOMETRY — Hexagonal 6-player Ludo
 // ============================================================
 const CX=300, CY=300;
-const R_TRACK=200;      // outer track circle radius
-const R_HOME=268;       // home zone center
-const R_HOME_TIP=295;   // home triangle tip
-const R_HS_OUT=162;     // home stretch outer radius
-const R_HS_IN=58;       // home stretch inner radius
-const CELL_R=11;        // track cell visual radius
-const HS_R=10;          // home stretch cell radius
-const N_TRACK=60;       // total track cells
-const N_HS=5;           // home stretch cells per player
+const R_HEX=200;    // hex vertex radius (outer track ring)
+const R_TIP=272;    // home triangle tip radius
+const CS=18;        // track cell square half-size
+const N_SIDE=9;     // cells per side (54 total)
+const N_HS=5;       // home stretch cells per player
 
-// 6 player setups — clockwise from bottom
-// angle: screen angle (90=bottom, increases clockwise since y-down)
+// 6 players, clockwise from top (matching reference image)
+// angle: degrees clockwise from top (12 o'clock)
 const SETUPS = [
-  { name:'Bleu',   hex:'#3498db', angle:90,  offset:0  },
-  { name:'Rouge',  hex:'#e74c3c', angle:150, offset:10 },
-  { name:'Vert',   hex:'#27ae60', angle:210, offset:20 },
-  { name:'Jaune',  hex:'#f1c40f', angle:270, offset:30 },
-  { name:'Orange', hex:'#e67e22', angle:330, offset:40 },
-  { name:'Violet', hex:'#9b59b6', angle:30,  offset:50 },
+  {name:'Jaune', hex:'#f1c40f', angle:0  , offset:0 },  // top
+  {name:'Orange',hex:'#e67e22', angle:60 , offset:9 },  // top-right
+  {name:'Violet',hex:'#9b59b6', angle:120, offset:18},  // bottom-right
+  {name:'Bleu',  hex:'#3498db', angle:180, offset:27},  // bottom
+  {name:'Rouge', hex:'#e74c3c', angle:240, offset:36},  // bottom-left
+  {name:'Vert',  hex:'#27ae60', angle:300, offset:45},  // top-left
 ];
+const N_TOTAL = N_SIDE * 6; // 54
 
-const MAX_PLAYERS = 6;
-const SAFE_REL = new Set([0, 5]); // relative positions that are safe (entry=0, mid=5)
-
-function rad(deg) { return deg * Math.PI / 180; }
-function px(angle_deg, r) {
-  return { x: CX + r * Math.cos(rad(angle_deg)), y: CY + r * Math.sin(rad(angle_deg)) };
+// Pixel from clockwise angle and radius
+function px(angleDeg, r) {
+  const a = angleDeg * Math.PI / 180;
+  return {x: CX + r * Math.sin(a), y: CY - r * Math.cos(a)};
 }
 
-// Track cell k: angle = 90 + k*6 (clockwise in screen coords)
-function trackPx(k) { return px(90 + k * 6, R_TRACK); }
+// Hex vertex for player pi
+function vertex(pi) { return px(SETUPS[pi].angle, R_HEX); }
 
-// Home stretch cell pi, hc (0=outer, 4=inner)
+// Track cell pixel: cell k on side s, interpolated along hex side
+function trackPx(absK) {
+  const s = Math.floor(absK / N_SIDE);
+  const t = (absK % N_SIDE + 0.5) / N_SIDE;
+  const V0 = vertex(s), V1 = vertex((s+1)%6);
+  return {x: V0.x + t*(V1.x-V0.x), y: V0.y + t*(V1.y-V0.y)};
+}
+
+// Home stretch cell pi, hc (0=outer, 4=inner/finish)
 function hsPx(pi, hc) {
-  const r = R_HS_OUT - hc * (R_HS_OUT - R_HS_IN) / (N_HS - 1);
+  const rOuter = R_HEX - 16;
+  const rInner = 65;
+  const r = rOuter - hc * (rOuter - rInner) / (N_HS - 1);
   return px(SETUPS[pi].angle, r);
 }
 
-// Home zone token spots (4 spots around home center)
+// Home zone token spots (4 spots in the home triangle)
 function homeSpotPx(pi, ti) {
-  const base = SETUPS[pi].angle;
-  const offsets = [[-15,-15],[15,-15],[-15,15],[15,15]];
-  const c = px(base, R_HOME);
-  return { x: c.x + offsets[ti][0], y: c.y + offsets[ti][1] };
+  const c = px(SETUPS[pi].angle, R_HEX + 52);
+  const r = 22; // spread
+  const spots = [[-r,-r],[r,-r],[-r,r],[r,r]];
+  return {x: c.x + spots[ti][0], y: c.y + spots[ti][1]};
 }
 
-// Token pixel position
-// rel: -1=home, 0-59=track (relative), 60-64=home stretch, 65=done
+// Token pixel position: rel=-1 home, 0-53 track, 54-58 HS, >=59 done
 function tokenPx(pi, ti, rel) {
-  if (rel === -1) return homeSpotPx(pi, ti);
-  if (rel >= 0 && rel <= 59) {
-    const abs = (rel + SETUPS[pi].offset) % N_TRACK;
-    return trackPx(abs);
-  }
-  if (rel >= 60 && rel <= 64) return hsPx(pi, rel - 60);
-  return px(SETUPS[pi].angle, R_HS_IN - 10); // done (center-ish)
+  if (rel < 0) return homeSpotPx(pi, ti);
+  if (rel <= 53) return trackPx((rel + SETUPS[pi].offset) % N_TOTAL);
+  if (rel <= 58) return hsPx(pi, rel - 54);
+  return px(SETUPS[pi].angle, 50);
 }
 
-function isSafeCell(pi, rel) {
-  if (rel < 0 || rel > 59) return true; // home or HS = always safe
-  if (SAFE_REL.has(rel % N_TRACK)) return true;
-  // Also safe if it's another player's entry cell
-  for (let other = 0; other < 6; other++) {
-    if (other === pi) continue;
-    const otherEntry = (SETUPS[other].offset - SETUPS[pi].offset + N_TRACK) % N_TRACK;
-    if (rel === otherEntry) return true;
-  }
-  return false;
-}
+// Is this absolute track cell a safe cell?
+const SAFE_ABS = new Set([0, 9, 18, 27, 36, 45]);
+function isSafe(absK) { return SAFE_ABS.has(absK); }
 
 // ============================================================
 // SVG HELPERS
@@ -290,131 +261,131 @@ function svgEl(tag, attrs, text) {
 // BOARD DRAWING
 // ============================================================
 function buildBoard() {
-  drawBg();
-  drawTrack();
+  drawHexBackground();
   drawHomeStretches();
+  drawTrackCells();
+  drawHomeZones();
   drawCenter();
 }
 
-function drawBg() {
-  const g = document.getElementById('board-bg');
-  g.innerHTML = '';
-  // Outer circle
-  g.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_HOME_TIP+8,fill:'#1a1740',stroke:'rgba(255,255,255,0.08)','stroke-width':1.5}));
-
-  // Home triangles for each player
-  SETUPS.forEach((s,pi) => {
-    const a = rad(s.angle);
-    const halfW = rad(28); // half-width of triangle at base
-    const tip = px(s.angle, R_HOME_TIP + 18);
-    const bl = { x: CX + R_TRACK * Math.cos(a - halfW), y: CY + R_TRACK * Math.sin(a - halfW) };
-    const br = { x: CX + R_TRACK * Math.cos(a + halfW), y: CY + R_TRACK * Math.sin(a + halfW) };
-    const pts = `${tip.x},${tip.y} ${bl.x},${bl.y} ${br.x},${br.y}`;
-    g.appendChild(svgEl('polygon',{points:pts,fill:s.hex,opacity:0.18}));
-    g.appendChild(svgEl('polygon',{points:pts,fill:'none',stroke:s.hex,'stroke-width':1.5,opacity:0.6}));
-
-    // Inner circle in home zone
-    const hc = px(s.angle, R_HOME);
-    g.appendChild(svgEl('circle',{cx:hc.x,cy:hc.y,r:30,fill:s.hex,opacity:0.22}));
-
-    // 4 token spots
-    for (let ti=0;ti<4;ti++) {
-      const sp = homeSpotPx(pi,ti);
-      g.appendChild(svgEl('circle',{cx:sp.x,cy:sp.y,r:9,fill:s.hex,opacity:0.3,stroke:'rgba(255,255,255,0.4)','stroke-width':0.8}));
-    }
-
-    // Player label
-    const lp = px(s.angle, R_HOME_TIP + 10);
-    // nudge label outward
-    const nudge = px(s.angle, R_HOME_TIP + 28);
-    g.appendChild(svgEl('text',{x:nudge.x,y:nudge.y+4,'text-anchor':'middle',fill:s.hex,'font-size':10,'font-weight':'bold','font-family':'Inter'},s.name));
-  });
-
-  // Main track circle (white, semi-transparent)
-  g.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_TRACK+CELL_R+2,fill:'none',stroke:'rgba(255,255,255,0.08)','stroke-width':1}));
-  g.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_TRACK-CELL_R-2,fill:'rgba(255,255,255,0.02)',stroke:'rgba(255,255,255,0.06)','stroke-width':1}));
+function drawHexBackground() {
+  const g = document.getElementById('g-hex-bg');
+  // Outer hexagon filled shape
+  const vpts = [0,1,2,3,4,5].map(i => vertex(i));
+  const poly = vpts.map(v=>`${v.x},${v.y}`).join(' ');
+  g.appendChild(svgEl('polygon',{points:poly, fill:'#13112e', stroke:'rgba(255,255,255,0.08)', 'stroke-width':1}));
 }
 
-function drawTrack() {
-  const g = document.getElementById('board-track');
+function drawTrackCells() {
+  const g = document.getElementById('g-track');
   g.innerHTML = '';
-  for (let k=0;k<N_TRACK;k++) {
-    const pos = trackPx(k);
-    // Determine which player section this cell is in
-    const pi = Math.floor(k / 10);
-    const relInSection = k % 10;
-    const s = SETUPS[pi];
-    const isEntry = relInSection === 0;
-    const isStar = relInSection === 5;
+  for (let k=0; k<N_TOTAL; k++) {
+    const p = trackPx(k);
+    const s = Math.floor(k / N_SIDE);
+    const posInSide = k % N_SIDE;
+
+    // Color: last 5 cells of each side = NEXT player's approach color
+    const isApproach = posInSide >= N_SIDE - 5;
+    const nextPi = (s + 1) % 6;
+    const fillColor = isApproach ? SETUPS[nextPi].hex : 'rgba(255,255,255,0.07)';
+    const strokeColor = isApproach ? SETUPS[nextPi].hex : 'rgba(255,255,255,0.18)';
+    const isEntry = (k === SETUPS[s].offset) || SAFE_ABS.has(k);
+    const isSafeCell = isSafe(k);
 
     g.appendChild(svgEl('rect',{
-      x:pos.x-CELL_R,y:pos.y-CELL_R,width:CELL_R*2,height:CELL_R*2,rx:3,
-      fill: isEntry ? s.hex+'55' : 'rgba(255,255,255,0.08)',
-      stroke: isEntry ? s.hex : isStar ? 'gold' : 'rgba(255,255,255,0.2)',
-      'stroke-width': isEntry||isStar ? 1.8 : 0.8,
-      id:`tc-${k}`
+      x:p.x-CS, y:p.y-CS, width:CS*2, height:CS*2, rx:3,
+      fill: isSafeCell ? SETUPS[s].hex+'33' : fillColor,
+      stroke: isSafeCell ? SETUPS[s].hex : strokeColor,
+      'stroke-width': isSafeCell ? 1.8 : 0.8,
+      id:`tc${k}`
     }));
 
-    if (isStar) {
-      g.appendChild(svgEl('text',{x:pos.x,y:pos.y+4,'text-anchor':'middle',fill:'gold','font-size':9,'font-family':'Inter'},'★'));
-    }
-    if (isEntry) {
-      // Arrow pointing inward
-      const arrowAngles = [90,150,210,270,330,30];
-      // We want an arrow pointing from outside toward center = opposite direction = angle+180
-      // But just show player initial
-      g.appendChild(svgEl('text',{x:pos.x,y:pos.y+4,'text-anchor':'middle',fill:'#fff','font-size':8,'font-weight':'bold','font-family':'Inter'},s.name[0]));
+    if (isSafeCell) {
+      g.appendChild(svgEl('text',{x:p.x,y:p.y+5,'text-anchor':'middle',fill:'gold','font-size':11,'font-family':'Inter'},'★'));
     }
   }
 }
 
 function drawHomeStretches() {
-  const g = document.getElementById('board-hs');
+  const g = document.getElementById('g-home-stretch');
   g.innerHTML = '';
   SETUPS.forEach((s,pi) => {
-    for (let hc=0;hc<N_HS;hc++) {
-      const pos = hsPx(pi,hc);
-      const isLast = hc === N_HS-1;
+    for (let hc=0; hc<N_HS; hc++) {
+      const p = hsPx(pi, hc);
+      const isLast = hc === N_HS - 1;
       g.appendChild(svgEl('rect',{
-        x:pos.x-HS_R,y:pos.y-HS_R,width:HS_R*2,height:HS_R*2,rx:3,
-        fill:isLast?s.hex+'88':s.hex+'33',
-        stroke:s.hex,'stroke-width':isLast?2:1,id:`hs-${pi}-${hc}`
+        x:p.x-CS+1, y:p.y-CS+1, width:(CS-1)*2, height:(CS-1)*2, rx:3,
+        fill: isLast ? s.hex+'bb' : s.hex+'44',
+        stroke: s.hex, 'stroke-width': isLast ? 2 : 1.2,
+        id:`hs${pi}_${hc}`
       }));
-      if (isLast) g.appendChild(svgEl('text',{x:pos.x,y:pos.y+4,'text-anchor':'middle',fill:'#fff','font-size':8,'font-family':'Inter'},'✓'));
+      if (isLast) g.appendChild(svgEl('text',{x:p.x,y:p.y+5,'text-anchor':'middle',fill:'#fff','font-size':11,'font-family':'Inter'},'✓'));
     }
   });
 }
 
-function drawCenter() {
-  // Center star
-  const pts=[];
-  for(let i=0;i<12;i++){
-    const r2=i%2===0?40:17,a=rad(i*30-90);
-    pts.push(`${CX+r2*Math.cos(a)},${CY+r2*Math.sin(a)}`);
-  }
-  const g = document.getElementById('board-hs');
-  g.appendChild(svgEl('polygon',{points:pts.join(' '),fill:'rgba(255,255,255,0.12)',stroke:'rgba(255,255,255,0.2)','stroke-width':1}));
-  // 6 colored center triangles
+function drawHomeZones() {
+  const g = document.getElementById('g-home-zones');
+  g.innerHTML = '';
+  const HALF_W_DEG = 26; // half-angle of home triangle base
+
   SETUPS.forEach((s,pi) => {
-    const a1 = rad(s.angle - 30), a2 = rad(s.angle + 30);
-    const r = 38;
+    const tip = px(s.angle, R_TIP);
+    const bL = px(s.angle - HALF_W_DEG, R_HEX);
+    const bR = px(s.angle + HALF_W_DEG, R_HEX);
+    const pts = `${tip.x},${tip.y} ${bL.x},${bL.y} ${bR.x},${bR.y}`;
+
+    // Background triangle
+    g.appendChild(svgEl('polygon',{points:pts, fill:s.hex, opacity:0.2}));
+    g.appendChild(svgEl('polygon',{points:pts, fill:'none', stroke:s.hex, 'stroke-width':2, opacity:0.7}));
+
+    // Inner white circle with token spots
+    const ctr = px(s.angle, R_HEX + 52);
+    g.appendChild(svgEl('circle',{cx:ctr.x,cy:ctr.y,r:36, fill:'rgba(255,255,255,0.06)', stroke:s.hex,'stroke-width':1.5}));
+
+    // 4 token spots
+    for (let ti=0;ti<4;ti++) {
+      const sp = homeSpotPx(pi, ti);
+      g.appendChild(svgEl('circle',{cx:sp.x,cy:sp.y,r:13, fill:s.hex, opacity:0.35, stroke:'rgba(255,255,255,0.5)','stroke-width':1}));
+    }
+
+    // Player label near tip
+    const lp = px(s.angle, R_TIP + 14);
+    g.appendChild(svgEl('text',{x:lp.x,y:lp.y+4,'text-anchor':'middle',fill:s.hex,'font-size':11,'font-weight':'bold','font-family':'Inter'},s.name));
+  });
+}
+
+function drawCenter() {
+  const g = document.getElementById('g-center');
+  g.innerHTML = '';
+  const R_C = 56;
+
+  // 6 colored triangles meeting at center
+  SETUPS.forEach((s,pi) => {
+    const a1 = (s.angle - 30) * Math.PI / 180;
+    const a2 = (s.angle + 30) * Math.PI / 180;
+    const p1 = {x: CX + R_C*Math.sin(a1), y: CY - R_C*Math.cos(a1)};
+    const p2 = {x: CX + R_C*Math.sin(a2), y: CY - R_C*Math.cos(a2)};
     g.appendChild(svgEl('polygon',{
-      points:`${CX},${CY} ${CX+r*Math.cos(a1)},${CY+r*Math.sin(a1)} ${CX+r*Math.cos(a2)},${CY+r*Math.sin(a2)}`,
-      fill:s.hex,opacity:0.35
+      points:`${CX},${CY} ${p1.x},${p1.y} ${p2.x},${p2.y}`,
+      fill:s.hex, opacity:0.5
     }));
   });
+
+  // Center border circle
+  g.appendChild(svgEl('circle',{cx:CX,cy:CY,r:R_C, fill:'none', stroke:'rgba(255,255,255,0.15)','stroke-width':1.5}));
 }
 
 // ============================================================
 // TOKEN RENDERING
 // ============================================================
 function renderTokens() {
-  const g = document.getElementById('board-tokens');
+  const g = document.getElementById('g-tokens');
   g.innerHTML = '';
   if (!state.session) return;
   const tokens = state.session.game_data?.tokens || {};
 
-  // Group by pixel pos to handle stacking
+  // Group tokens at same pixel to handle stacking
   const byPos = {};
   state.players.filter(p=>p.is_active).forEach(p => {
     const pi = boardIndex(p.id);
@@ -422,7 +393,7 @@ function renderTokens() {
     const ptoks = tokens[p.id] || [{rel:-1},{rel:-1},{rel:-1},{rel:-1}];
     ptoks.forEach((tok,ti) => {
       const rel = tok.rel ?? -1;
-      if (rel >= 65) return; // fully done, skip rendering on board
+      if (rel >= 59) return;
       const pos = tokenPx(pi, ti, rel);
       const key = `${Math.round(pos.x)},${Math.round(pos.y)}`;
       if (!byPos[key]) byPos[key] = [];
@@ -430,17 +401,17 @@ function renderTokens() {
     });
   });
 
-  const offsets = [[0,0],[-8,0],[8,0],[0,-8],[0,8],[4,4]];
+  const offsets = [[0,0],[-9,0],[9,0],[0,-9],[0,9],[6,6]];
   Object.values(byPos).forEach(group => {
     group.forEach(({p,pi,ti,rel,pos},idx) => {
       const [ox,oy] = offsets[idx]||[0,0];
-      const cx = pos.x+ox, cy = pos.y+oy;
+      const cx=pos.x+ox, cy=pos.y+oy;
       const s = SETUPS[pi];
-      const isMe = p.id === state.myPlayer?.id;
       const gd = state.session?.game_data||{};
       const isSel = gd.sel_player===p.id && gd.sel_token===ti;
+      const isMe = p.id === state.myPlayer?.id;
 
-      g.appendChild(svgEl('circle',{cx,cy,r:9,fill:s.hex,
+      g.appendChild(svgEl('circle',{cx,cy,r:10,fill:s.hex,
         stroke:isSel?'gold':isMe?'#fff':'rgba(255,255,255,0.7)',
         'stroke-width':isSel?3:isMe?2:1.2,opacity:0.95}));
       g.appendChild(svgEl('text',{x:cx,y:cy+4,'text-anchor':'middle',fill:'#fff',
@@ -450,24 +421,21 @@ function renderTokens() {
 }
 
 // ============================================================
-// STATE
+// STATE & PRESENCE
 // ============================================================
-let state = { session:null, players:[], myPlayer:null };
+let state = {session:null, players:[], myPlayer:null};
 let heartbeatInterval = null;
-const HEARTBEAT_MS = 15000, STALE_MS = 45000;
+const HEARTBEAT_MS=15000, STALE_MS=45000;
 
-// board position index based on join order → SETUPS index
 function boardIndex(playerId) {
   const active = state.players.filter(p=>p.is_active).sort((a,b)=>a.turn_order-b.turn_order);
-  const idx = active.findIndex(p=>p.id===playerId);
-  return Math.min(idx, 5);
+  return Math.min(active.findIndex(p=>p.id===playerId), 5);
 }
 
 function isHost() {
   if (!state.myPlayer) return false;
   const active = state.players.filter(p=>p.is_active);
-  if (!active.length) return false;
-  return state.myPlayer.turn_order === Math.min(...active.map(p=>p.turn_order));
+  return active.length > 0 && state.myPlayer.turn_order === Math.min(...active.map(p=>p.turn_order));
 }
 
 function isMyTurn() {
@@ -476,27 +444,27 @@ function isMyTurn() {
 
 function startHeartbeat() {
   stopHeartbeat();
-  heartbeatInterval = setInterval(async () => {
+  heartbeatInterval = setInterval(async()=>{
     if (state.myPlayer) await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',state.myPlayer.id);
   }, HEARTBEAT_MS);
 }
 function stopHeartbeat() { if(heartbeatInterval){clearInterval(heartbeatInterval);heartbeatInterval=null;} }
 
 async function cleanStalePlayers() {
-  const threshold = new Date(Date.now()-STALE_MS).toISOString();
-  const stale = state.players.filter(p=>p.is_active&&p.last_seen&&p.last_seen<threshold);
+  const thr = new Date(Date.now()-STALE_MS).toISOString();
+  const stale = state.players.filter(p=>p.is_active&&p.last_seen&&p.last_seen<thr);
   if (!stale.length) return;
   await sb.from('players').update({is_active:false}).in('id',stale.map(p=>p.id));
   stale.forEach(p=>{p.is_active=false;});
 }
 
 async function fixStaleSession() {
-  if (!state.myPlayer || state.session?.status !== 'playing') return;
+  if (!state.myPlayer||state.session?.status!=='playing') return;
   const active = state.players.filter(p=>p.is_active);
   if (active.find(p=>p.id===state.session.current_player_id)) return;
-  const sorted = [...active].sort((a,b)=>a.turn_order-b.turn_order);
-  if (!sorted.length || sorted[0].id !== state.myPlayer.id) return;
-  if (active.length <= 1) {
+  const sorted=[...active].sort((a,b)=>a.turn_order-b.turn_order);
+  if (!sorted.length||sorted[0].id!==state.myPlayer.id) return;
+  if (active.length<=1) {
     await sb.from('game_sessions').update({status:'waiting',current_player_id:null}).eq('id',state.session.id);
     state.session.status='waiting'; state.session.current_player_id=null;
   } else {
@@ -518,38 +486,38 @@ window.addEventListener('beforeunload',()=>{
 // JOIN
 // ============================================================
 async function joinGame() {
-  const name = document.getElementById('nameInput').value.trim();
-  const err = document.getElementById('joinError');
-  if (!name){err.textContent='Entrez votre nom.';return;}
-  const savedId = localStorage.getItem(`ludo_player_${TABLE_ID}`);
-  const savedName = localStorage.getItem(`ludo_name_${TABLE_ID}`);
+  const name=document.getElementById('nameInput').value.trim();
+  const err=document.getElementById('joinError');
+  if(!name){err.textContent='Entrez votre nom.';return;}
+  const savedId=localStorage.getItem(`ludo_player_${TABLE_ID}`);
+  const savedName=localStorage.getItem(`ludo_name_${TABLE_ID}`);
   try {
     let session;
-    const {data:existing} = await sb.from('game_sessions').select('*')
+    const {data:existing}=await sb.from('game_sessions').select('*')
       .eq('table_id',TABLE_ID).eq('game_type','ludo').neq('status','finished')
       .order('created_at',{ascending:false}).limit(1).single();
 
     if (existing) {
-      const threshold = new Date(Date.now()-STALE_MS).toISOString();
-      const {count} = await sb.from('players').select('*',{count:'exact',head:true})
-        .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',threshold);
-      if ((count||0)===0) {
+      const thr=new Date(Date.now()-STALE_MS).toISOString();
+      const {count}=await sb.from('players').select('*',{count:'exact',head:true})
+        .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',thr);
+      if((count||0)===0){
         await sb.from('players').update({is_active:false}).eq('session_id',existing.id).eq('is_active',true);
         await sb.from('game_sessions').update({status:'finished'}).eq('id',existing.id);
       } else { session=existing; }
     }
     if (!session) {
-      const {data:ns,error} = await sb.from('game_sessions').insert({
+      const {data:ns,error}=await sb.from('game_sessions').insert({
         game_type:'ludo',table_id:TABLE_ID,status:'waiting',
         game_data:{tokens:{},phase:'rolling',dice:null,init_rolls:{},play_order:[]}
       }).select().single();
-      if (error) throw error;
+      if(error) throw error;
       session=ns;
     }
 
-    if (savedId && savedName===name) {
-      const {data:ret} = await sb.from('players').select('*').eq('id',savedId).single();
-      if (ret && ret.session_id===session.id) {
+    if (savedId&&savedName===name) {
+      const {data:ret}=await sb.from('players').select('*').eq('id',savedId).single();
+      if (ret&&ret.session_id===session.id) {
         await sb.from('players').update({is_active:true,last_seen:new Date().toISOString()}).eq('id',ret.id);
         state.myPlayer={...ret,is_active:true}; state.session=session;
         document.getElementById('joinOverlay').classList.remove('show');
@@ -557,18 +525,18 @@ async function joinGame() {
       }
     }
 
-    const {data:allP} = await sb.from('players').select('*').eq('session_id',session.id);
-    const active = allP?.filter(p=>p.is_active)||[];
-    if (active.find(p=>p.name.toLowerCase()===name.toLowerCase())){err.textContent='Nom déjà pris.';return;}
-    if (active.length>=MAX_PLAYERS){err.textContent=`Table complète (${MAX_PLAYERS}/${MAX_PLAYERS}).`;return;}
+    const {data:allP}=await sb.from('players').select('*').eq('session_id',session.id);
+    const active=allP?.filter(p=>p.is_active)||[];
+    if(active.find(p=>p.name.toLowerCase()===name.toLowerCase())){err.textContent='Nom déjà pris.';return;}
+    if(active.length>=MAX_PLAYERS){err.textContent=`Table complète (${MAX_PLAYERS}/${MAX_PLAYERS}).`;return;}
 
-    const to = allP?.length||0;
-    const pi = active.length % MAX_PLAYERS;
-    const {data:player,error:pErr} = await sb.from('players').insert({
-      session_id:session.id, name, color:SETUPS[pi].hex, turn_order:to,
-      position:0, score:0, last_seen:new Date().toISOString()
+    const to=allP?.length||0;
+    const pi=active.length%MAX_PLAYERS;
+    const {data:player,error:pErr}=await sb.from('players').insert({
+      session_id:session.id,name,color:SETUPS[pi].hex,turn_order:to,
+      position:0,score:0,last_seen:new Date().toISOString()
     }).select().single();
-    if (pErr) throw pErr;
+    if(pErr) throw pErr;
 
     localStorage.setItem(`ludo_player_${TABLE_ID}`,player.id);
     localStorage.setItem(`ludo_name_${TABLE_ID}`,name);
@@ -576,7 +544,7 @@ async function joinGame() {
     document.getElementById('joinOverlay').classList.remove('show');
     await loadGameState(); startHeartbeat(); subscribeRealtime();
     addLog(`<span>${name}</span> a rejoint`);
-  } catch(e){ err.textContent='Erreur: '+e.message; }
+  } catch(e){err.textContent='Erreur: '+e.message;}
 }
 document.getElementById('nameInput').addEventListener('keypress',e=>{if(e.key==='Enter')joinGame();});
 
@@ -584,11 +552,11 @@ document.getElementById('nameInput').addEventListener('keypress',e=>{if(e.key===
 // LOAD STATE
 // ============================================================
 async function loadGameState() {
-  const {data:sess} = await sb.from('game_sessions').select('*').eq('id',state.session.id).single();
-  if (sess) state.session=sess;
-  const {data:players} = await sb.from('players').select('*').eq('session_id',state.session.id).order('turn_order');
-  if (players) state.players=players;
-  if (state.myPlayer){ const me=players?.find(p=>p.id===state.myPlayer.id); if(me) state.myPlayer=me; }
+  const {data:sess}=await sb.from('game_sessions').select('*').eq('id',state.session.id).single();
+  if(sess) state.session=sess;
+  const {data:players}=await sb.from('players').select('*').eq('session_id',state.session.id).order('turn_order');
+  if(players) state.players=players;
+  if(state.myPlayer){const me=players?.find(p=>p.id===state.myPlayer.id);if(me)state.myPlayer=me;}
   await cleanStalePlayers();
   await fixStaleSession();
   renderAll();
@@ -610,18 +578,16 @@ function renderPlayers() {
   const cnt=document.getElementById('playerCount');
   const active=state.players.filter(p=>p.is_active);
   cnt.textContent=`(${active.length}/${MAX_PLAYERS})`;
-  const gd=state.session?.game_data||{};
-  const tokens=gd.tokens||{};
+  const tokens=state.session?.game_data?.tokens||{};
   list.innerHTML=active.map(p=>{
     const pi=boardIndex(p.id);
     const s=pi>=0?SETUPS[pi]:null;
     const ptoks=tokens[p.id]||[{rel:-1},{rel:-1},{rel:-1},{rel:-1}];
     const isActive=state.session?.current_player_id===p.id;
-    const isMe=p.id===state.myPlayer?.id;
     return `<div class="player-item ${isActive?'active':''}">
       <div class="player-dot" style="background:${s?.hex||'#fff'}"></div>
-      <div class="player-name">${p.name}${isMe?' (moi)':''}</div>
-      <div class="pion-mini">${ptoks.map(t=>`<div class="pm ${(t.rel??-1)>=65?'done':''}" style="background:${s?.hex||'#fff'}"></div>`).join('')}</div>
+      <div style="flex:1;font-size:0.87rem;font-weight:600">${p.name}${p.id===state.myPlayer?.id?' (moi)':''} <small style="opacity:0.45;font-size:0.73rem">${s?.name||''}</small></div>
+      <div class="pion-mini">${ptoks.map(t=>`<div class="pm ${(t.rel??-1)>=59?'done':''}" style="background:${s?.hex||'#fff'}"></div>`).join('')}</div>
       ${isActive?'<span class="turn-badge">TOUR</span>':''}
     </div>`;
   }).join('');
@@ -630,34 +596,32 @@ function renderPlayers() {
 function updateStatus() {
   const bar=document.getElementById('statusBar');
   const sess=state.session;
-  if (!sess){bar.textContent='En attente…';return;}
-  const gd=sess.game_data||{};
-  if (sess.status==='waiting') {
+  if(!sess){bar.textContent='En attente…';return;}
+  if(sess.status==='waiting'){
     const cnt=state.players.filter(p=>p.is_active).length;
-    bar.innerHTML=cnt<2?`${cnt}/6 joueurs — Minimum 2`:`${cnt} joueurs prêts !`;
-    if (cnt>=2&&isHost()) bar.innerHTML+=` <button class="btn btn-primary" style="margin-left:8px;padding:4px 11px;font-size:0.76rem" onclick="startInitRoll()">▶ Démarrer</button>`;
-  } else if (sess.status==='init_rolling') {
-    bar.textContent='🎲 Tirage de l\'ordre de jeu en cours…';
-  } else if (sess.status==='playing') {
+    bar.innerHTML=cnt<2?`${cnt}/6 — Minimum 2 joueurs`:`${cnt} joueurs prêts !`;
+    if(cnt>=2&&isHost()) bar.innerHTML+=` <button class="btn btn-primary" style="margin-left:8px;padding:4px 10px;font-size:0.75rem" onclick="startInitRoll()">▶ Démarrer</button>`;
+  } else if(sess.status==='init_rolling'){
+    bar.textContent='🎲 Tirage de l\'ordre…';
+  } else if(sess.status==='playing'){
     const curr=state.players.find(p=>p.id===sess.current_player_id);
-    if (isMyTurn()) { bar.textContent='🎲 Lancez le dé !'; bar.style.color='#2ecc71'; }
-    else { bar.textContent=`⏳ Tour de ${curr?.name||'…'}`; bar.style.color='#667eea'; }
+    if(isMyTurn()){bar.textContent='🎲 Lancez le dé !';bar.style.color='#2ecc71';}
+    else{bar.textContent=`⏳ Tour de ${curr?.name||'…'}`;bar.style.color='#667eea';}
   }
 }
 
 function updateRollBtn() {
-  const btn=document.getElementById('rollBtn');
   const gd=state.session?.game_data||{};
-  btn.disabled=!(isMyTurn()&&gd.phase==='rolling');
+  document.getElementById('rollBtn').disabled=!(isMyTurn()&&gd.phase==='rolling');
 }
 
 // ============================================================
-// INITIAL ROLL PHASE
+// INIT ROLL
 // ============================================================
 async function startInitRoll() {
   const active=state.players.filter(p=>p.is_active);
   const initTokens={};
-  active.forEach(p=>{ initTokens[p.id]=[{rel:-1},{rel:-1},{rel:-1},{rel:-1}]; });
+  active.forEach(p=>{initTokens[p.id]=[{rel:-1},{rel:-1},{rel:-1},{rel:-1}];});
   await sb.from('game_sessions').update({
     status:'init_rolling',
     game_data:{tokens:initTokens,phase:'rolling',init_rolls:{},play_order:[]}
@@ -666,28 +630,22 @@ async function startInitRoll() {
 
 function updateInitRollUI() {
   const sess=state.session;
-  if (!sess||sess.status!=='init_rolling') {
-    document.getElementById('initRollOverlay').classList.remove('show');
-    return;
-  }
-  document.getElementById('initRollOverlay').classList.add('show');
-  const gd=sess.game_data||{};
-  const rolls=gd.init_rolls||{};
+  const overlay=document.getElementById('initRollOverlay');
+  if(!sess||sess.status!=='init_rolling'){overlay.classList.remove('show');return;}
+  overlay.classList.add('show');
+  const rolls=sess.game_data?.init_rolls||{};
   const myRoll=rolls[state.myPlayer?.id];
-  const btn=document.getElementById('initRollBtn');
-  btn.disabled=!!myRoll;
+  document.getElementById('initRollBtn').disabled=!!myRoll;
   document.getElementById('initRollStatus').textContent=myRoll?`Votre résultat : ${DICE_FACES[myRoll-1]} (${myRoll})`:'';
-
-  const grid=document.getElementById('initRollGrid');
   const active=state.players.filter(p=>p.is_active);
-  grid.innerHTML=active.map(p=>{
+  document.getElementById('initRollGrid').innerHTML=active.map(p=>{
     const pi=boardIndex(p.id);
     const s=pi>=0?SETUPS[pi]:null;
     const val=rolls[p.id];
     return `<div class="init-roll-item">
-      <div style="font-size:0.82rem;font-weight:600;color:${s?.hex||'#fff'}">${p.name}</div>
-      <div class="init-roll-val">${val?DICE_FACES[val-1]:'⬜'}</div>
-      <div style="font-size:0.78rem;color:rgba(255,255,255,0.4)">${val?val+' pts':'en attente'}</div>
+      <div style="font-size:0.8rem;font-weight:600;color:${s?.hex||'#fff'}">${p.name}</div>
+      <div style="font-size:1.6rem;margin:3px 0">${val?DICE_FACES[val-1]:'⬜'}</div>
+      <div style="font-size:0.75rem;color:rgba(255,255,255,0.4)">${val?val+' pts':'…'}</div>
     </div>`;
   }).join('');
 }
@@ -695,28 +653,19 @@ function updateInitRollUI() {
 async function doInitRoll() {
   const val=Math.floor(Math.random()*6)+1;
   const gd={...state.session.game_data};
-  const rolls={...gd.init_rolls, [state.myPlayer.id]:val};
+  const rolls={...gd.init_rolls,[state.myPlayer.id]:val};
   const active=state.players.filter(p=>p.is_active);
   const allRolled=active.every(p=>rolls[p.id]!==undefined);
-
-  if (allRolled) {
-    // Determine play order: highest first, then clockwise
-    const sorted=[...active].sort((a,b)=>{
-      const da=rolls[a.id], db=rolls[b.id];
-      if (da!==db) return db-da; // highest first
-      return a.turn_order-b.turn_order; // tiebreak by join order
-    });
+  if(allRolled){
+    const sorted=[...active].sort((a,b)=>(rolls[b.id]-rolls[a.id])||a.turn_order-b.turn_order);
     const playOrder=sorted.map(p=>p.id);
     await sb.from('game_sessions').update({
-      status:'playing',
-      current_player_id:playOrder[0],
+      status:'playing',current_player_id:playOrder[0],
       game_data:{...gd,init_rolls:rolls,play_order:playOrder,phase:'rolling',dice:null}
     }).eq('id',state.session.id);
     addLog(`Ordre: ${sorted.map(p=>`<span>${p.name}</span>(${rolls[p.id]})`).join(' → ')}`);
   } else {
-    await sb.from('game_sessions').update({
-      game_data:{...gd,init_rolls:rolls}
-    }).eq('id',state.session.id);
+    await sb.from('game_sessions').update({game_data:{...gd,init_rolls:rolls}}).eq('id',state.session.id);
   }
 }
 
@@ -738,200 +687,173 @@ async function finalizeDice() {
   const val=Math.floor(Math.random()*6)+1;
   document.getElementById('dice-display').textContent=DICE_FACES[val-1];
   addLog(`<span>${state.myPlayer.name}</span> lance : ${val}`);
-
   const gd=state.session.game_data;
   const pi=boardIndex(state.myPlayer.id);
   const myToks=gd.tokens[state.myPlayer.id]||[{rel:-1},{rel:-1},{rel:-1},{rel:-1}];
   const hasOnBoard=myToks.some(t=>(t.rel??-1)>=0);
   const moves=getValidMoves(pi,myToks,val);
 
-  if (moves.length===0) {
-    addLog(`<span>${state.myPlayer.name}</span> : aucun mouvement`);
+  if(!moves.length){
+    addLog(`<span>${state.myPlayer.name}</span> : aucun mouvement possible`);
     await sb.from('game_sessions').update({game_data:{...gd,phase:'rolling',dice:null}}).eq('id',state.session.id);
-    await advanceTurn(val);
+    await advanceTurn();
     return;
   }
 
-  // If rolling 6 with NO tokens on board → auto-exit, no question
-  if (val===6 && !hasOnBoard && moves.length===1 && moves[0].from===-1) {
-    await executeMove(moves[0], val, false);
-    return;
+  // Auto-exit with no question if no tokens on board and rolled 6
+  if(val===6&&!hasOnBoard&&moves.length===1&&moves[0].from===-1){
+    await executeMove(moves[0],val);return;
   }
 
-  // If only one move possible and player has no tokens on board → auto (no question)
-  if (!hasOnBoard && moves.length===1) {
-    await executeMove(moves[0], val, false);
-    return;
+  // Single move with no tokens on board → auto, no question
+  if(!hasOnBoard&&moves.length===1){
+    await executeMove(moves[0],val);return;
   }
 
-  // Multiple moves or has tokens on board → select token then question
-  if (moves.length===1) {
-    // Only 1 valid move → go to question directly
-    await sb.from('game_sessions').update({game_data:{...gd,dice:val,phase:'question',sel_player:state.myPlayer.id,sel_token:moves[0].tokenIdx,pending_move:moves[0]}}).eq('id',state.session.id);
-    showQuestion(val,moves[0],hasOnBoard);
-    return;
+  // Question required (tokens on board)
+  if(moves.length===1){
+    await sb.from('game_sessions').update({game_data:{...gd,dice:val,phase:'question',
+      sel_player:state.myPlayer.id,sel_token:moves[0].tokenIdx,pending_move:moves[0]}}).eq('id',state.session.id);
+    showQuestion(val,moves[0]);return;
   }
 
-  // Multiple moves → show selection
   await sb.from('game_sessions').update({game_data:{...gd,dice:val,phase:'selecting'}}).eq('id',state.session.id);
-  showTokenSelect(val,moves,pi,hasOnBoard);
+  showTokenSelect(val,moves,pi);
 }
 
-function getValidMoves(pi, ptoks, dice) {
+function getValidMoves(pi,ptoks,dice){
   const moves=[];
-  const setup=SETUPS[pi];
   ptoks.forEach((tok,ti)=>{
     const rel=tok.rel??-1;
-    if (rel>=65) return;
-    if (rel===-1) {
-      if (dice!==6) return;
-      // Check entry not blocked by own token
-      const entryRel=0;
-      const blocked=ptoks.some((t,i)=>i!==ti&&(t.rel??-1)===0);
-      if (!blocked) moves.push({tokenIdx:ti,from:-1,to:0});
-      return;
+    if(rel>=59) return;
+    if(rel===-1){
+      if(dice!==6) return;
+      if(ptoks.some((t,i)=>i!==ti&&(t.rel??-1)===0)) return;
+      moves.push({tokenIdx:ti,from:-1,to:0}); return;
     }
-    if (rel<=59) {
-      const newRel=rel+dice;
-      if (newRel<=64) moves.push({tokenIdx:ti,from:rel,to:newRel});
-      return;
-    }
-    if (rel<=63) {
-      const newRel=rel+dice;
-      if (newRel<=64) moves.push({tokenIdx:ti,from:rel,to:newRel});
-    }
+    if(rel<=53){const nr=rel+dice;if(nr<=58)moves.push({tokenIdx:ti,from:rel,to:nr});return;}
+    if(rel<=57){const nr=rel+dice;if(nr<=58)moves.push({tokenIdx:ti,from:rel,to:nr});}
   });
   return moves;
 }
 
-function showTokenSelect(dice, moves, pi, hasOnBoard) {
+function showTokenSelect(dice,moves,pi){
   document.getElementById('tokenDice').textContent=DICE_FACES[dice-1]+' '+dice;
-  document.getElementById('tokenDesc').textContent=`${moves.length} pions peuvent bouger.`;
-  const grid=document.getElementById('tokenGrid');
   const s=SETUPS[pi];
-  grid.innerHTML=moves.map(m=>{
-    const from=m.from===-1?'🏠 Maison':`Rel.${m.from}`;
-    const to=m.to>=65?'🏆 Arrivée':m.to>=60?`Couloir ${m.to-59}/5`:`Rel.${m.to}`;
-    return `<button class="token-btn" style="border-color:${s.hex}" onclick='selectToken(${m.tokenIdx},${JSON.stringify(m)},${hasOnBoard})'>
-      Pion ${m.tokenIdx+1}<br><small style="color:rgba(255,255,255,0.5)">${from} → ${to}</small>
-    </button>`;
+  document.getElementById('tokenGrid').innerHTML=moves.map(m=>{
+    const from=m.from===-1?'🏠':'Rel.'+m.from;
+    const to=m.to>=59?'🏆':m.to>=54?`Couloir ${m.to-53}/5`:`Rel.${m.to}`;
+    return `<button class="token-btn" style="border-color:${s.hex}" onclick='selectToken(${m.tokenIdx},${JSON.stringify(m)})'>Pion ${m.tokenIdx+1}<br><small style="color:rgba(255,255,255,0.5)">${from}→${to}</small></button>`;
   }).join('');
   document.getElementById('tokenOverlay').classList.add('show');
 }
 
-async function selectToken(ti, move, hasOnBoard) {
+async function selectToken(ti,move){
   document.getElementById('tokenOverlay').classList.remove('show');
   const gd=state.session.game_data;
-  await sb.from('game_sessions').update({game_data:{...gd,phase:'question',sel_player:state.myPlayer.id,sel_token:ti,pending_move:move}}).eq('id',state.session.id);
-  showQuestion(gd.dice, move, hasOnBoard);
+  await sb.from('game_sessions').update({game_data:{...gd,phase:'question',
+    sel_player:state.myPlayer.id,sel_token:ti,pending_move:move}}).eq('id',state.session.id);
+  showQuestion(gd.dice,move);
 }
 
-function showQuestion(dice, move, hasOnBoard) {
-  // Question difficulty based on home stretch progress
-  const level = move.to>=60?'hard':move.to>=30?'medium':'easy';
-  const pool=LUDO_QUESTIONS.filter(q=>q.level===level);
+function showQuestion(dice,move){
+  const lvl=move.to>=54?'hard':move.to>=27?'medium':'easy';
+  const pool=LUDO_QUESTIONS.filter(q=>q.level===lvl);
   const q=pool[Math.floor(Math.random()*pool.length)];
   const lEl=document.getElementById('qLevel');
-  lEl.textContent=level==='easy'?'FACILE':level==='medium'?'MOYEN':'DIFFICILE';
-  lEl.className=`q-level ${level}`;
-  const pi=boardIndex(state.myPlayer.id);
-  const mvDesc=move.from===-1?'Sortir de la maison':move.to>=65?'ARRIVÉE':move.to>=60?`Couloir ${move.to-59}/5`:`Avancer à ${move.to}`;
+  lEl.textContent=lvl==='easy'?'FACILE':lvl==='medium'?'MOYEN':'DIFFICILE';
+  lEl.className=`q-level ${lvl}`;
+  const mvDesc=move.from===-1?'Sortir de la maison':move.to>=59?'ARRIVÉE':move.to>=54?`Couloir ${move.to-53}/5`:`Avancer à rel.${move.to}`;
   document.getElementById('qCtx').textContent=`Dé: ${dice} — ${mvDesc}`;
   document.getElementById('qText').textContent=q.question;
-  const opts=document.getElementById('qOptions');
-  opts.innerHTML=q.options.map((o,i)=>`<button class="q-option" onclick="answerQ(${i},${q.answer})">${o}</button>`).join('');
+  document.getElementById('qOptions').innerHTML=q.options.map((o,i)=>`<button class="q-option" onclick="answerQ(${i},${q.answer})">${o}</button>`).join('');
   document.getElementById('qResult').className='q-result';
   document.getElementById('qResult').style.display='none';
   document.getElementById('questionOverlay').classList.add('show');
 }
 
-async function answerQ(chosen, correct) {
+async function answerQ(chosen,correct){
   const opts=document.querySelectorAll('.q-option');
   opts.forEach(o=>o.disabled=true);
   const ok=chosen===correct;
   opts[correct].classList.add('correct');
-  if (!ok) opts[chosen].classList.add('wrong');
+  if(!ok) opts[chosen].classList.add('wrong');
   const res=document.getElementById('qResult');
   res.className=`q-result show ${ok?'good':'bad'}`;
   res.style.display='block';
   const gd=state.session.game_data;
-  const move=gd.pending_move;
-  const dice=gd.dice;
-  if (ok) {
+  if(ok){
     res.textContent='✅ Bonne réponse ! Le pion avance.';
-    setTimeout(async()=>{document.getElementById('questionOverlay').classList.remove('show');await executeMove(move,dice,true);},1800);
+    setTimeout(async()=>{document.getElementById('questionOverlay').classList.remove('show');await executeMove(gd.pending_move,gd.dice);},1800);
   } else {
     res.textContent='❌ Mauvaise réponse. Tour perdu.';
     setTimeout(async()=>{
       document.getElementById('questionOverlay').classList.remove('show');
       await sb.from('game_sessions').update({game_data:{...gd,phase:'rolling',dice:null,pending_move:null,sel_player:null,sel_token:null}}).eq('id',state.session.id);
-      await advanceTurn(dice);
+      await advanceTurn();
     },1800);
   }
 }
 
-async function executeMove(move, dice, withQuestion) {
+async function executeMove(move,dice){
   const gd={...state.session.game_data};
   const tokens={...gd.tokens};
   const pi=boardIndex(state.myPlayer.id);
   const myToks=[...(tokens[state.myPlayer.id]||[{rel:-1},{rel:-1},{rel:-1},{rel:-1}])];
-  const newRel=move.to>=65?65:move.to;
-  myToks[move.tokenIdx]={rel:newRel};
+  myToks[move.tokenIdx]={rel:move.to>=59?59:move.to};
   tokens[state.myPlayer.id]=myToks;
 
-  // Capture check (only on outer track, non-safe cells)
-  if (move.to>=0&&move.to<=59) {
-    const myAbs=(move.to+SETUPS[pi].offset)%N_TRACK;
-    if (!isSafeCell(pi,move.to)) {
+  // Capture (only on outer track, non-safe)
+  if(move.to>=0&&move.to<=53){
+    const myAbs=(move.to+SETUPS[pi].offset)%N_TOTAL;
+    if(!isSafe(myAbs)){
       state.players.filter(p=>p.is_active&&p.id!==state.myPlayer.id).forEach(opp=>{
         const oppPi=boardIndex(opp.id);
-        if (oppPi<0) return;
+        if(oppPi<0) return;
         const oppToks=[...(tokens[opp.id]||[{rel:-1},{rel:-1},{rel:-1},{rel:-1}])];
         let cap=false;
         oppToks.forEach((t,ti)=>{
-          if ((t.rel??-1)<0||(t.rel??-1)>59) return;
-          if ((t.rel+SETUPS[oppPi].offset)%N_TRACK===myAbs){oppToks[ti]={rel:-1};cap=true;}
+          if((t.rel??-1)<0||(t.rel??-1)>53) return;
+          if((t.rel+SETUPS[oppPi].offset)%N_TOTAL===myAbs){oppToks[ti]={rel:-1};cap=true;}
         });
-        if (cap){tokens[opp.id]=oppToks;addLog(`<span>${state.myPlayer.name}</span> capture un pion de ${opp.name}!`);}
+        if(cap){tokens[opp.id]=oppToks;addLog(`<span>${state.myPlayer.name}</span> capture un pion de ${opp.name}!`);}
       });
     }
   }
 
-  const doneToks=myToks.filter(t=>(t.rel??-1)>=65).length;
-  const won=doneToks>=4;
-  const newGd={...gd,tokens,pending_move:null,dice:null,sel_player:null,sel_token:null};
+  const won=myToks.filter(t=>(t.rel??-1)>=59||t.rel===58).length>=4;
+  const newGd={...gd,tokens,pending_move:null,dice:null,sel_player:null,sel_token:null,phase:'rolling'};
 
-  if (won) {
-    await sb.from('game_sessions').update({status:'finished',game_data:{...newGd,winner:state.myPlayer.name,phase:'done'}}).eq('id',state.session.id);
+  if(won){
+    await sb.from('game_sessions').update({status:'finished',game_data:{...newGd,winner:state.myPlayer.name}}).eq('id',state.session.id);
     document.getElementById('winnerName').textContent=state.myPlayer.name;
     document.getElementById('gameOverOverlay').classList.add('show');
     addLog(`🏆 <span>${state.myPlayer.name}</span> a gagné !`);
     return;
   }
 
-  if (dice===6) {
-    await sb.from('game_sessions').update({game_data:{...newGd,phase:'rolling'}}).eq('id',state.session.id);
-    addLog(`<span>${state.myPlayer.name}</span> relance (6!)`);
+  if(dice===6){
+    await sb.from('game_sessions').update({game_data:newGd}).eq('id',state.session.id);
+    addLog(`<span>${state.myPlayer.name}</span> rejoue (6!)`);
   } else {
-    await sb.from('game_sessions').update({game_data:{...newGd,phase:'rolling'}}).eq('id',state.session.id);
-    await advanceTurn(dice);
+    await sb.from('game_sessions').update({game_data:newGd}).eq('id',state.session.id);
+    await advanceTurn();
   }
 }
 
-async function advanceTurn(dice) {
+async function advanceTurn(){
   const gd=state.session.game_data;
-  const playOrder=gd.play_order||[];
+  const po=gd.play_order||[];
   const active=state.players.filter(p=>p.is_active).map(p=>p.id);
-  const activePO=playOrder.filter(id=>active.includes(id));
-  if (!activePO.length) return;
-  const ci=activePO.indexOf(state.session.current_player_id);
-  const next=activePO[(ci+1)%activePO.length];
+  const apo=po.filter(id=>active.includes(id));
+  if(!apo.length) return;
+  const ci=apo.indexOf(state.session.current_player_id);
+  const next=apo[(ci+1)%apo.length];
   await sb.from('game_sessions').update({current_player_id:next}).eq('id',state.session.id);
-  const nextP=state.players.find(p=>p.id===next);
-  addLog(`Tour de <span>${nextP?.name||'?'}</span>`);
+  addLog(`Tour de <span>${state.players.find(p=>p.id===next)?.name||'?'}</span>`);
 }
 
-async function resetGame() {
+async function resetGame(){
   await sb.from('game_sessions').update({status:'finished'}).eq('id',state.session.id);
   await sb.from('players').update({is_active:false}).eq('session_id',state.session.id);
   state.session=null;state.players=[];state.myPlayer=null;
@@ -941,22 +863,21 @@ async function resetGame() {
   localStorage.removeItem(`ludo_name_${TABLE_ID}`);
 }
 
-async function leaveGame() {
+async function leaveGame(){
   stopHeartbeat();
-  if (state.myPlayer) await sb.from('players').update({is_active:false}).eq('id',state.myPlayer.id);
+  if(state.myPlayer) await sb.from('players').update({is_active:false}).eq('id',state.myPlayer.id);
   window.location.href='index.html';
 }
 
 // ============================================================
 // REALTIME
 // ============================================================
-function subscribeRealtime() {
+function subscribeRealtime(){
   sb.channel(`ludo-${TABLE_ID}`)
     .on('postgres_changes',{event:'*',schema:'public',table:'game_sessions',filter:`id=eq.${state.session.id}`},async payload=>{
       state.session=payload.new;
-      const gd=payload.new.game_data||{};
-      if (payload.new.status==='finished'&&gd.winner) {
-        document.getElementById('winnerName').textContent=gd.winner;
+      if(payload.new.status==='finished'&&payload.new.game_data?.winner){
+        document.getElementById('winnerName').textContent=payload.new.game_data.winner;
         document.getElementById('gameOverOverlay').classList.add('show');
       }
       renderAll();
@@ -965,11 +886,10 @@ function subscribeRealtime() {
     .subscribe();
 }
 
-function addLog(msg) {
-  const area=document.getElementById('logArea');
-  const div=document.createElement('div');div.className='log-item';div.innerHTML=msg;
-  area.prepend(div);
-  if(area.children.length>25) area.removeChild(area.lastChild);
+function addLog(msg){
+  const a=document.getElementById('logArea');
+  const d=document.createElement('div');d.className='log-item';d.innerHTML=msg;
+  a.prepend(d);if(a.children.length>25)a.removeChild(a.lastChild);
 }
 
 // ============================================================
