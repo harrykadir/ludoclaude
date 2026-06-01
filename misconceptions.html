@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LudoClaude — 3 Mensonges 1 Vérité</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#001a3a,#003366,#001a2e); min-height:100vh; color:#fff; }
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 28px; border-bottom:1px solid rgba(255,255,255,0.1);
+  background:rgba(0,0,0,0.3); backdrop-filter:blur(10px);
+  position:sticky; top:0; z-index:100;
+}
+.logo { font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#4facfe,#00f2fe); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.btn { padding:8px 20px; border-radius:10px; border:none; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.9rem; font-weight:600; transition:all 0.2s; }
+.btn-primary { background:linear-gradient(135deg,#4facfe,#00f2fe); color:#001a3a; }
+.btn-primary:hover { opacity:0.85; transform:translateY(-1px); }
+.btn-secondary { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; }
+.btn-secondary:hover { background:rgba(255,255,255,0.1); }
+.btn:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+
+.main { max-width:960px; margin:0 auto; padding:24px; }
+
+.panel { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:24px; margin-bottom:20px; }
+.panel-title { font-size:0.85rem; font-weight:600; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.5); margin-bottom:16px; }
+
+.status-bar { background:rgba(79,172,254,0.1); border:1px solid rgba(79,172,254,0.2); border-radius:10px; padding:10px 14px; font-size:0.9rem; color:#4facfe; font-weight:500; margin-bottom:12px; text-align:center; }
+.progress-track { background:rgba(255,255,255,0.1); border-radius:10px; height:6px; margin:0 0 20px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#4facfe,#00f2fe); border-radius:10px; transition:width 0.4s; }
+
+/* Round / Question */
+.round-header { text-align:center; margin-bottom:24px; }
+.round-badge { display:inline-block; background:linear-gradient(135deg,#4facfe,#00f2fe); color:#001a3a; padding:6px 20px; border-radius:20px; font-size:0.85rem; font-weight:800; margin-bottom:12px; }
+.round-subtitle { color:rgba(255,255,255,0.5); font-size:0.9rem; }
+
+/* Statement cards */
+.statements-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.statement-card {
+  background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.1);
+  border-radius:16px; padding:22px 18px; cursor:pointer; transition:all 0.25s;
+  position:relative; text-align:left;
+}
+.statement-card:hover:not(.disabled) {
+  background:rgba(79,172,254,0.1); border-color:#4facfe;
+  transform:translateY(-2px); box-shadow:0 8px 30px rgba(79,172,254,0.2);
+}
+.statement-card.disabled { cursor:default; }
+.statement-card.selected { background:rgba(79,172,254,0.15); border-color:#4facfe; }
+.statement-card.correct { background:rgba(46,204,113,0.15); border-color:#2ecc71; }
+.statement-card.wrong { background:rgba(231,76,60,0.1); border-color:rgba(231,76,60,0.3); opacity:0.7; }
+.statement-num {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(255,255,255,0.1); font-size:0.85rem; font-weight:700;
+  margin-bottom:10px;
+}
+.statement-text { font-size:0.97rem; line-height:1.55; }
+.statement-badge {
+  position:absolute; top:12px; right:12px;
+  padding:3px 10px; border-radius:10px; font-size:0.72rem; font-weight:700;
+}
+.badge-truth { background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid rgba(46,204,113,0.4); }
+.badge-lie { background:rgba(231,76,60,0.2); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
+
+/* Votes display */
+.votes-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+.votes-row:last-child { border:none; }
+.vote-player { flex:1; font-size:0.9rem; }
+.vote-choice { font-size:0.85rem; color:rgba(255,255,255,0.5); }
+.vote-check { color:#2ecc71; font-size:1.1rem; }
+.vote-cross { color:#e74c3c; font-size:1.1rem; }
+
+/* Reveal overlay */
+.reveal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px);
+  z-index:200; display:flex; align-items:center; justify-content:center;
+  padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.reveal-overlay.show { opacity:1; pointer-events:all; }
+.reveal-modal {
+  background:linear-gradient(135deg,#001a3a,#003060); border:1px solid rgba(255,255,255,0.15);
+  border-radius:24px; padding:40px; max-width:640px; width:100%; text-align:center;
+}
+.reveal-truth-card {
+  background:rgba(46,204,113,0.15); border:2px solid #2ecc71;
+  border-radius:16px; padding:20px; margin:20px 0; font-size:1.05rem; font-weight:600; line-height:1.5;
+}
+.explanation-box {
+  background:rgba(79,172,254,0.1); border:1px solid rgba(79,172,254,0.3);
+  border-radius:12px; padding:16px; margin-top:16px; font-size:0.9rem; line-height:1.6;
+  color:rgba(255,255,255,0.8); text-align:left;
+}
+
+/* Score */
+.score-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+.score-row:last-child { border:none; }
+.score-dot { width:10px; height:10px; border-radius:50%; }
+.score-bar-wrap { flex:1; }
+.score-bar { height:6px; background:linear-gradient(90deg,#4facfe,#00f2fe); border-radius:3px; transition:width 0.4s; }
+.score-pts { font-size:1rem; font-weight:800; color:#4facfe; min-width:50px; text-align:right; }
+
+/* Players */
+.player-item { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; border:1px solid transparent; margin-bottom:6px; transition:all 0.3s; }
+.player-item.active { background:rgba(79,172,254,0.15); border-color:rgba(79,172,254,0.4); }
+.player-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.turn-badge { background:linear-gradient(135deg,#4facfe,#00f2fe); color:#001a3a; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; }
+
+/* Join / overlays */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+.overlay.show { opacity:1; pointer-events:all; }
+.modal { background:linear-gradient(135deg,#001a3a,#003060); border:1px solid rgba(255,255,255,0.15); border-radius:24px; padding:36px; max-width:480px; width:100%; }
+.modal h2 { font-size:1.6rem; font-weight:800; margin-bottom:8px; }
+.modal p { color:rgba(255,255,255,0.6); margin-bottom:24px; }
+.input-group { margin-bottom:16px; }
+.input-group label { display:block; font-size:0.85rem; font-weight:600; color:rgba(255,255,255,0.6); margin-bottom:6px; }
+.input-group input { width:100%; padding:12px 16px; border-radius:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); color:#fff; font-family:'Inter',sans-serif; font-size:1rem; outline:none; }
+.input-group input:focus { border-color:#4facfe; }
+.error-msg { color:#e74c3c; font-size:0.85rem; margin-top:8px; min-height:20px; }
+
+.two-col { display:grid; grid-template-columns:1fr 300px; gap:20px; }
+@media(max-width:768px) { .two-col { grid-template-columns:1fr; } .statements-grid { grid-template-columns:1fr; } }
+
+/* Waiting for vote anim */
+.waiting-votes { text-align:center; padding:16px; color:rgba(255,255,255,0.5); font-size:0.9rem; }
+.dots::after { content:'...'; animation:dots 1.5s infinite; }
+@keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="index.html" style="color:rgba(255,255,255,0.6);text-decoration:none;font-size:1.5rem">←</a>
+    <div class="logo">🕵️ 3 Mensonges 1 Vérité</div>
+  </div>
+  <div style="font-size:0.9rem;color:rgba(255,255,255,0.5)">Round <span id="roundNum">0</span>/10</div>
+  <button class="btn btn-secondary" onclick="leaveGame()">Quitter</button>
+</header>
+
+<!-- Join -->
+<div class="overlay show" id="joinOverlay">
+  <div class="modal">
+    <h2>🕵️ 3 Mensonges 1 Vérité</h2>
+    <p>4 affirmations sur Claude — 3 sont fausses, 1 est vraie. Trouvez la vérité ! 10 rounds.</p>
+    <div class="input-group">
+      <label>Votre nom</label>
+      <input type="text" id="nameInput" placeholder="Ex: Charlie" maxlength="20" autocomplete="off">
+    </div>
+    <div class="error-msg" id="joinError"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px;padding:14px" onclick="joinGame()">Rejoindre →</button>
+  </div>
+</div>
+
+<!-- Reveal overlay -->
+<div class="reveal-overlay" id="revealOverlay">
+  <div class="reveal-modal">
+    <div style="font-size:2rem;margin-bottom:8px">✅</div>
+    <h2 style="font-size:1.5rem;margin-bottom:4px">La vérité était...</h2>
+    <div class="reveal-truth-card" id="revealTruth"></div>
+    <div class="explanation-box" id="revealExplanation"></div>
+
+    <div style="margin-top:24px">
+      <div style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Résultats du round</div>
+      <div id="revealVotes"></div>
+    </div>
+
+    <div style="margin-top:24px;display:flex;align-items:center;gap:20px;justify-content:center">
+      <button class="btn btn-primary" style="padding:12px 28px" id="revealNextBtn" onclick="nextRound()">Round suivant →</button>
+      <div style="text-align:center">
+        <div id="mcCountdown" style="font-size:2.2rem;font-weight:800;color:#4facfe;line-height:1">7</div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4)">secondes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div class="overlay" id="gameOverOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:3rem;margin-bottom:12px">🏆</div>
+    <h2 id="winnerName">Champion !</h2>
+    <p style="margin-bottom:24px">a remporté 3 Mensonges 1 Vérité !</p>
+    <div id="finalScores" style="margin-bottom:24px;text-align:center"></div>
+    <button class="btn btn-primary" style="padding:12px 32px" onclick="location.reload()">Rejouer</button>
+    <a href="index.html" class="btn btn-secondary" style="display:inline-block;margin-top:10px;padding:12px 32px;text-decoration:none">Accueil</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="status-bar" id="statusBar">En attente de joueurs...</div>
+  <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+
+  <div class="two-col">
+    <div>
+      <!-- Question panel -->
+      <div class="panel">
+        <div class="round-header">
+          <div class="round-badge" id="roundBadge">Round 0 / 10</div>
+          <p class="round-subtitle">Parmi ces 4 affirmations sur Claude, une seule est vraie. Laquelle ?</p>
+        </div>
+
+        <div class="statements-grid" id="statementsGrid">
+          <div class="statement-card disabled" style="grid-column:1/-1;text-align:center;opacity:0.4">
+            <div style="font-size:2rem;margin-bottom:8px">🕵️</div>
+            <div>En attente du début de la partie...</div>
+          </div>
+        </div>
+
+        <div id="voteStatus" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Players -->
+      <div class="panel">
+        <div class="panel-title">Joueurs <span style="color:#4facfe" id="playerCount">(0/6)</span></div>
+        <div id="playersList"></div>
+      </div>
+      <!-- Scores -->
+      <div class="panel">
+        <div class="panel-title">Classement</div>
+        <div id="scoreboard"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const TABLE_ID = 'misconceptions';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let state = { session: null, players: [], myPlayer: null };
+
+function isHost() {
+  if (!state.myPlayer) return false;
+  const active = state.players.filter(p => p.is_active);
+  if (!active.length) return false;
+  const minOrder = Math.min(...active.map(p => p.turn_order));
+  return state.myPlayer.turn_order === minOrder;
+}
+
+let revealTimer = null;
+function startRevealCountdown() {
+  clearRevealTimer();
+  let t = 7;
+  document.getElementById('mcCountdown').textContent = t;
+  revealTimer = setInterval(() => {
+    t--;
+    document.getElementById('mcCountdown').textContent = t;
+    if (t <= 0) { clearRevealTimer(); if (isHost()) nextRound(); }
+  }, 1000);
+}
+function clearRevealTimer() { if (revealTimer) { clearInterval(revealTimer); revealTimer = null; } }
+
+// ============================================================
+// JOIN
+// ============================================================
+async function joinGame() {
+  const name = document.getElementById('nameInput').value.trim();
+  const err = document.getElementById('joinError');
+  if (!name) { err.textContent = 'Entrez votre nom.'; return; }
+
+  const savedId = localStorage.getItem('mc_player');
+  const savedName = localStorage.getItem('mc_name');
+
+  try {
+    let session;
+    const { data: existing } = await sb.from('game_sessions').select('*')
+      .eq('table_id', TABLE_ID).eq('game_type', 'misconceptions').neq('status', 'finished')
+      .order('created_at', { ascending: false }).limit(1).single();
+
+    if (existing) {
+      const { count } = await sb.from('players').select('*', { count: 'exact', head: true })
+        .eq('session_id', existing.id).eq('is_active', true);
+      if ((count || 0) === 0) {
+        await sb.from('game_sessions').update({ status: 'finished' }).eq('id', existing.id);
+      } else {
+        session = existing;
+      }
+    }
+    if (!session) {
+      const { data: ns } = await sb.from('game_sessions').insert({
+        game_type: 'misconceptions', table_id: TABLE_ID, status: 'waiting',
+        game_data: { round_votes: {} }
+      }).select().single();
+      session = ns;
+    }
+
+    if (savedId && savedName === name) {
+      const { data: ret } = await sb.from('players').select('*').eq('id', savedId).single();
+      if (ret && ret.session_id === session.id) {
+        state.myPlayer = ret; state.session = session;
+        document.getElementById('joinOverlay').classList.remove('show');
+        await loadGameState(); subscribeRealtime(); return;
+      }
+    }
+
+    const { data: allP } = await sb.from('players').select('*').eq('session_id', session.id);
+    if (allP?.find(p => p.name.toLowerCase() === name.toLowerCase() && p.is_active)) { err.textContent = 'Nom déjà pris.'; return; }
+    if (allP?.filter(p=>p.is_active).length >= 6) { err.textContent = 'Partie complète (6/6).'; return; }
+
+    const to = allP?.length || 0;
+    const { data: player } = await sb.from('players').insert({
+      session_id: session.id, name, color: PLAYER_COLORS[to % 6], turn_order: to, score: 0
+    }).select().single();
+
+    localStorage.setItem('mc_player', player.id);
+    localStorage.setItem('mc_name', name);
+    state.myPlayer = player; state.session = session;
+    document.getElementById('joinOverlay').classList.remove('show');
+    await loadGameState(); subscribeRealtime();
+  } catch(e) { err.textContent = 'Erreur: ' + e.message; }
+}
+document.getElementById('nameInput').addEventListener('keypress', e => { if(e.key==='Enter') joinGame(); });
+
+// ============================================================
+// STATE
+// ============================================================
+async function loadGameState() {
+  const { data: sess } = await sb.from('game_sessions').select('*').eq('id', state.session.id).single();
+  if (sess) state.session = sess;
+  const { data: players } = await sb.from('players').select('*').eq('session_id', state.session.id).order('turn_order');
+  if (players) state.players = players;
+  if (state.myPlayer) {
+    const me = players?.find(p => p.id === state.myPlayer.id);
+    if (me) state.myPlayer = me;
+  }
+  await fixStaleSession();
+  renderAll();
+}
+
+async function fixStaleSession() {
+  if (!state.myPlayer || state.session?.status !== 'playing') return;
+  const active = state.players.filter(p => p.is_active);
+  if (active.find(p => p.id === state.session.current_player_id)) return;
+  const sorted = [...active].sort((a, b) => a.turn_order - b.turn_order);
+  if (!sorted.length || sorted[0].id !== state.myPlayer.id) return;
+  if (active.length <= 1) {
+    await sb.from('game_sessions').update({ status: 'waiting', current_player_id: null }).eq('id', state.session.id);
+    state.session.status = 'waiting';
+    state.session.current_player_id = null;
+  } else {
+    await sb.from('game_sessions').update({ current_player_id: sorted[0].id }).eq('id', state.session.id);
+    state.session.current_player_id = sorted[0].id;
+  }
+}
+
+function renderAll() {
+  renderPlayers();
+  renderScoreboard();
+  updateStatusBar();
+  renderQuestion();
+  updateRoundDisplay();
+}
+
+function renderPlayers() {
+  const list = document.getElementById('playersList');
+  const count = document.getElementById('playerCount');
+  const active = state.players.filter(p => p.is_active);
+  count.textContent = `(${active.length}/6)`;
+  const sess = state.session;
+  const votes = sess?.game_data?.round_votes || {};
+  list.innerHTML = active.map(p => {
+    const isActive = sess?.current_player_id === p.id && sess?.status === 'playing';
+    const isMe = p.id === state.myPlayer?.id;
+    const hasVoted = votes[p.id] !== undefined;
+    return `<div class="player-item ${isActive?'active':''}">
+      <div class="player-dot" style="background:${p.color}"></div>
+      <div style="flex:1;font-size:0.9rem;font-weight:600">${p.name}${isMe?' (moi)':''}</div>
+      ${hasVoted ? '<span style="color:#2ecc71">✓</span>' : ''}
+      ${isActive ? '<span class="turn-badge">TOUR</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderScoreboard() {
+  const el = document.getElementById('scoreboard');
+  const sorted = [...state.players].filter(p=>p.is_active).sort((a,b)=>b.score-a.score);
+  const max = sorted[0]?.score || 1;
+  const ranks = ['🥇','🥈','🥉'];
+  el.innerHTML = sorted.map((p,i) => `
+    <div class="score-row">
+      <span style="font-size:1.1rem;width:24px">${ranks[i]||''}</span>
+      <div class="score-dot" style="background:${p.color}"></div>
+      <span style="flex:1;font-size:0.9rem;font-weight:600">${p.name}</span>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${(p.score/max)*100}%"></div></div>
+      <div class="score-pts">${p.score} pts</div>
+    </div>`).join('');
+}
+
+function updateRoundDisplay() {
+  const r = state.session?.current_round || 0;
+  document.getElementById('roundNum').textContent = r;
+  document.getElementById('roundBadge').textContent = `Round ${r} / 10`;
+  document.getElementById('progFill').style.width = `${(r/10)*100}%`;
+}
+
+function updateStatusBar() {
+  const bar = document.getElementById('statusBar');
+  const sess = state.session;
+  if (!sess) return;
+  if (sess.status === 'waiting') {
+    const cnt = state.players.filter(p=>p.is_active).length;
+    bar.textContent = cnt < 2 ? `${cnt}/6 joueurs — Minimum 2 pour jouer.` : `${cnt} joueurs prêts !`;
+    if (cnt >= 2 && isHost()) {
+      bar.innerHTML += ` <button class="btn btn-primary" style="margin-left:8px;padding:6px 14px;font-size:0.8rem;color:#001a3a" onclick="startGame()">▶ Démarrer</button>`;
+    }
+  } else if (sess.status === 'playing') {
+    const curr = state.players.find(p => p.id === sess.current_player_id);
+    bar.textContent = curr?.id === state.myPlayer?.id
+      ? `🎯 C'est votre tour de voter !`
+      : `⏳ Tour de ${curr?.name || '...'} — Round ${sess.current_round}/10`;
+  }
+}
+
+function renderQuestion() {
+  const sess = state.session;
+  const grid = document.getElementById('statementsGrid');
+  const voteStatus = document.getElementById('voteStatus');
+
+  if (!sess || sess.status === 'waiting') {
+    grid.innerHTML = `<div class="statement-card disabled" style="grid-column:1/-1;text-align:center;opacity:0.4">
+      <div style="font-size:2rem;margin-bottom:8px">🕵️</div>
+      <div>En attente du début de la partie...</div>
+    </div>`;
+    voteStatus.innerHTML = '';
+    return;
+  }
+
+  const idx = Math.min(sess.current_question_index, MISCONCEPTIONS_QUESTIONS.length - 1);
+  const q = MISCONCEPTIONS_QUESTIONS[idx];
+  const votes = sess.game_data?.round_votes || {};
+  const myVote = votes[state.myPlayer?.id];
+  const isMyTurn = sess.current_player_id === state.myPlayer?.id;
+  const canVote = isMyTurn && myVote === undefined && sess.status === 'playing';
+
+  grid.innerHTML = q.statements.map((stmt, i) => {
+    let cls = 'statement-card';
+    if (!canVote) cls += ' disabled';
+    if (myVote === i) cls += ' selected';
+    const onclick = canVote ? `onclick="castVote(${i})"` : '';
+    return `<div class="${cls}" ${onclick}>
+      <div class="statement-num">${i+1}</div>
+      <div class="statement-text">${stmt}</div>
+    </div>`;
+  }).join('');
+
+  // Vote status
+  const active = state.players.filter(p=>p.is_active);
+  const voteCount = Object.keys(votes).filter(id => active.find(p=>p.id===id)).length;
+
+  if (sess.status === 'playing') {
+    if (myVote !== undefined) {
+      voteStatus.innerHTML = `<div style="text-align:center;color:rgba(255,255,255,0.5);font-size:0.9rem;padding:10px">
+        ✅ Vote enregistré — ${voteCount}/${active.length} joueurs ont voté
+        <span class="dots"></span>
+      </div>`;
+    } else if (!isMyTurn) {
+      voteStatus.innerHTML = `<div class="waiting-votes">⏳ En attente du vote de ${state.players.find(p=>p.id===sess.current_player_id)?.name || '...'} <span class="dots"></span></div>`;
+    } else {
+      voteStatus.innerHTML = `<div style="text-align:center;color:#4facfe;font-size:0.9rem;padding:10px;font-weight:600">👆 Cliquez sur l'affirmation que vous pensez être vraie</div>`;
+    }
+  }
+}
+
+// ============================================================
+// GAME FLOW
+// ============================================================
+async function startGame() {
+  const active = state.players.filter(p=>p.is_active);
+  await sb.from('game_sessions').update({
+    status: 'playing', current_round: 1, current_question_index: 0,
+    current_player_id: active[0].id,
+    game_data: { round_votes: {} }
+  }).eq('id', state.session.id);
+}
+
+async function castVote(choice) {
+  const sess = state.session;
+  const votes = { ...(sess.game_data?.round_votes || {}) };
+  votes[state.myPlayer.id] = choice;
+
+  await sb.from('game_events').insert({
+    session_id: sess.id, player_id: state.myPlayer.id,
+    event_type: 'vote', event_data: { choice, round: sess.current_round }
+  });
+
+  const active = state.players.filter(p=>p.is_active);
+  const allVoted = active.every(p => votes[p.id] !== undefined);
+
+  if (!allVoted) {
+    // Move to next non-voted player
+    const currIdx = active.findIndex(p => p.id === sess.current_player_id);
+    let nextIdx = (currIdx + 1) % active.length;
+    while (votes[active[nextIdx].id] !== undefined && nextIdx !== currIdx) {
+      nextIdx = (nextIdx + 1) % active.length;
+    }
+    await sb.from('game_sessions').update({
+      game_data: { ...sess.game_data, round_votes: votes },
+      current_player_id: active[nextIdx].id
+    }).eq('id', sess.id);
+  } else {
+    await sb.from('game_sessions').update({
+      game_data: { ...sess.game_data, round_votes: votes }
+    }).eq('id', sess.id);
+    setTimeout(() => revealAnswers(votes), 400);
+  }
+}
+
+async function revealAnswers(votes) {
+  const sess = state.session;
+  const idx = Math.min(sess.current_question_index, MISCONCEPTIONS_QUESTIONS.length - 1);
+  const q = MISCONCEPTIONS_QUESTIONS[idx];
+  const active = state.players.filter(p=>p.is_active);
+
+  // Update scores
+  for (const p of active) {
+    const voted = votes[p.id];
+    if (voted === q.truth) {
+      await sb.from('players').update({ score: p.score + 5 }).eq('id', p.id);
+    }
+  }
+
+  // Build reveal
+  document.getElementById('revealTruth').textContent = `✓ "${q.statements[q.truth]}"`;
+  document.getElementById('revealExplanation').textContent = `💡 ${q.explanation}`;
+
+  document.getElementById('revealVotes').innerHTML = active.map(p => {
+    const voted = votes[p.id];
+    const correct = voted === q.truth;
+    return `<div class="votes-row">
+      <div class="player-dot" style="background:${p.color};width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
+      <div class="vote-player" style="font-weight:600">${p.name}</div>
+      <div class="vote-choice" style="font-size:0.85rem">"${voted !== undefined ? q.statements[voted].substring(0,40)+'...' : '?'}"</div>
+      <div class="${correct?'vote-check':'vote-cross'}">${correct?'✓':'✗'}</div>
+      ${correct ? '<span style="color:#4facfe;font-size:0.8rem;font-weight:700">+5 pts</span>' : ''}
+    </div>`;
+  }).join('');
+
+  const isMain = isHost();
+  document.getElementById('revealNextBtn').style.display = isMain ? 'inline-block' : 'none';
+  document.getElementById('revealOverlay').classList.add('show');
+  await loadGameState();
+  startRevealCountdown();
+}
+
+async function nextRound() {
+  clearRevealTimer();
+  document.getElementById('revealOverlay').classList.remove('show');
+  const sess = state.session;
+  const nextR = (sess.current_round || 1) + 1;
+
+  if (nextR > 10 || sess.current_question_index + 1 >= MISCONCEPTIONS_QUESTIONS.length) {
+    await finishGame(); return;
+  }
+  const active = state.players.filter(p=>p.is_active);
+  await sb.from('game_sessions').update({
+    current_round: nextR,
+    current_question_index: sess.current_question_index + 1,
+    current_player_id: active[0].id,
+    game_data: { ...sess.game_data, round_votes: {} }
+  }).eq('id', sess.id);
+}
+
+async function finishGame() {
+  await loadGameState();
+  const sorted = [...state.players].filter(p=>p.is_active).sort((a,b)=>b.score-a.score);
+  const winner = sorted[0];
+  await sb.from('game_sessions').update({ status: 'finished', game_data: { ...state.session.game_data, winner: winner.name } }).eq('id', state.session.id);
+  document.getElementById('winnerName').textContent = winner.name;
+  document.getElementById('finalScores').innerHTML = sorted.map((p,i) =>
+    `<div style="display:flex;align-items:center;gap:10px;margin:8px 0;justify-content:center">
+      <span style="font-size:1.2rem">${['🥇','🥈','🥉'][i]||''}</span>
+      <span style="font-weight:600">${p.name}</span>
+      <span style="color:#4facfe;font-weight:800">${p.score} pts</span>
+    </div>`).join('');
+  document.getElementById('gameOverOverlay').classList.add('show');
+}
+
+async function leaveGame() {
+  if (state.myPlayer) await sb.from('players').update({ is_active: false }).eq('id', state.myPlayer.id);
+  window.location.href = 'index.html';
+}
+
+// ============================================================
+// REALTIME
+// ============================================================
+function subscribeRealtime() {
+  sb.channel(`mc-${state.session.id}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${state.session.id}` }, async payload => {
+      if (payload.new.current_round > (state.session?.current_round || 0)) {
+        clearRevealTimer();
+        document.getElementById('revealOverlay').classList.remove('show');
+      }
+      const prev = state.session;
+      state.session = payload.new;
+      const gd = payload.new.game_data || {};
+      const active = state.players.filter(p=>p.is_active);
+      const allVoted = active.every(p => gd.round_votes?.[p.id] !== undefined);
+
+      if (allVoted && payload.new.status === 'playing' && state.myPlayer?.turn_order !== 0) {
+        setTimeout(() => revealAnswers(gd.round_votes), 400);
+      }
+      if (payload.new.status === 'finished' && gd.winner) {
+        document.getElementById('winnerName').textContent = gd.winner;
+        document.getElementById('gameOverOverlay').classList.add('show');
+      }
+      renderAll();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `session_id=eq.${state.session.id}` }, () => loadGameState())
+    .subscribe();
+}
+
+const sn = localStorage.getItem('mc_name');
+if (sn) document.getElementById('nameInput').value = sn;
+</script>
+</body>
+</html>

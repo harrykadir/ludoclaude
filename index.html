@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LudoClaude — Session Live</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    min-height: 100vh;
+    color: #fff;
+  }
+  .hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+  }
+  .logo {
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+    letter-spacing: -2px;
+  }
+  .subtitle {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.6);
+    font-weight: 300;
+  }
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 12px;
+    letter-spacing: 1px;
+  }
+  .section-title {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.4);
+    margin: 40px 0 24px;
+  }
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+  .game-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 32px 28px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+  .game-card:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .game-card:hover::before { transform: scaleX(1); }
+  .card-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .card-desc {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .card-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    background: rgba(255,255,255,0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .ludo-tables {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 40px;
+  }
+  .tables-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+  .table-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    display: block;
+  }
+  .table-card:hover {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: #667eea;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(102,126,234,0.3);
+  }
+  .table-number {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .table-label {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.5);
+    margin-top: 4px;
+  }
+  .table-players {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.35);
+    margin-top: 8px;
+  }
+  .players-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #2ecc71;
+    margin-right: 4px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .footer {
+    text-align: center;
+    padding: 32px;
+    color: rgba(255,255,255,0.3);
+    font-size: 0.85rem;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  @media (max-width: 768px) {
+    .tables-grid { grid-template-columns: repeat(3, 1fr); }
+    .logo { font-size: 2.5rem; }
+  }
+  @media (max-width: 480px) {
+    .tables-grid { grid-template-columns: repeat(2, 1fr); }
+    .games-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo">🎮 LudoClaude</div>
+  <p class="subtitle">Session Live Interactive — Apprends Claude en jouant</p>
+  <div class="badge">✦ Synchronisation temps réel</div>
+</div>
+
+<p class="section-title">Jeux disponibles</p>
+<div class="games-grid">
+  <div class="game-card" style="--accent: linear-gradient(135deg,#667eea,#764ba2)" onclick="location.href='ludo-table-1.html'">
+    <span class="card-icon">🎲</span>
+    <div class="card-title">Ludo Claude</div>
+    <p class="card-desc">Plateau hexagonal, questions sur Claude, avancez en répondant correctement. 5 tables disponibles, 6 joueurs max par table.</p>
+    <div class="card-tags">
+      <span class="tag">6 joueurs</span>
+      <span class="tag">60 cases</span>
+      <span class="tag">30 questions</span>
+    </div>
+  </div>
+  <a href="token-roulette.html" class="game-card" style="--accent: linear-gradient(135deg,#f093fb,#f5576c)">
+    <span class="card-icon">🎰</span>
+    <div class="card-title">Token Roulette</div>
+    <p class="card-desc">Estimez le nombre de tokens d'un texte. Plus vous êtes proche, plus vous marquez de points. 10 rounds de défi.</p>
+    <div class="card-tags">
+      <span class="tag">6 joueurs</span>
+      <span class="tag">10 rounds</span>
+      <span class="tag">Estimation</span>
+    </div>
+  </a>
+  <a href="misconceptions.html" class="game-card" style="--accent: linear-gradient(135deg,#4facfe,#00f2fe)">
+    <span class="card-icon">🕵️</span>
+    <div class="card-title">3 Mensonges 1 Vérité</div>
+    <p class="card-desc">4 affirmations sur Claude, 3 sont fausses, 1 est vraie. Trouvez laquelle ! 10 rounds de déception et révélations.</p>
+    <div class="card-tags">
+      <span class="tag">6 joueurs</span>
+      <span class="tag">10 rounds</span>
+      <span class="tag">Vote</span>
+    </div>
+  </a>
+</div>
+
+<p class="section-title">Tables Ludo</p>
+<div class="ludo-tables">
+  <div class="tables-grid" id="tablesGrid">
+    <!-- Generated by JS -->
+  </div>
+</div>
+
+<div class="footer">
+  LudoClaude · Session Live Claude · Temps réel via Supabase
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadTablePlayers() {
+  const grid = document.getElementById('tablesGrid');
+  const counts = {};
+
+  try {
+    const { data: sessions } = await supabase
+      .from('game_sessions')
+      .select('table_id, id')
+      .eq('game_type', 'ludo')
+      .eq('status', 'playing');
+
+    if (sessions) {
+      for (const s of sessions) {
+        const { count } = await supabase
+          .from('players')
+          .select('*', { count: 'exact', head: true })
+          .eq('session_id', s.id)
+          .eq('is_active', true);
+        counts[s.table_id] = count || 0;
+      }
+    }
+  } catch (e) { /* silently fail */ }
+
+  grid.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const tableId = `ludo-table-${i}`;
+    const playerCount = counts[tableId] || 0;
+    const card = document.createElement('a');
+    card.href = `ludo-table-${i}.html`;
+    card.className = 'table-card';
+    card.innerHTML = `
+      <div class="table-number">${i}</div>
+      <div class="table-label">Table ${i}</div>
+      <div class="table-players">
+        <span class="players-dot"></span>${playerCount}/6 joueurs
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+}
+
+loadTablePlayers();
+setInterval(loadTablePlayers, 10000);
+</script>
+</body>
+</html>

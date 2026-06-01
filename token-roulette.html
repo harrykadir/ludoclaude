@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LudoClaude — Token Roulette</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#1a0533,#2d0a4e,#1a0040); min-height:100vh; color:#fff; }
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 28px; border-bottom:1px solid rgba(255,255,255,0.1);
+  background:rgba(0,0,0,0.3); backdrop-filter:blur(10px);
+  position:sticky; top:0; z-index:100;
+}
+.logo { font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#f093fb,#f5576c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.btn { padding:8px 20px; border-radius:10px; border:none; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.9rem; font-weight:600; transition:all 0.2s; }
+.btn-primary { background:linear-gradient(135deg,#f093fb,#f5576c); color:#fff; }
+.btn-primary:hover { opacity:0.85; transform:translateY(-1px); }
+.btn-secondary { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; }
+.btn-secondary:hover { background:rgba(255,255,255,0.1); }
+.btn:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+
+.main { max-width:900px; margin:0 auto; padding:24px; }
+
+.panel { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:24px; margin-bottom:20px; }
+.panel-title { font-size:0.85rem; font-weight:600; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.5); margin-bottom:16px; }
+
+/* Round display */
+.round-header { text-align:center; padding:32px 24px; }
+.round-badge { display:inline-block; background:linear-gradient(135deg,#f093fb,#f5576c); padding:6px 20px; border-radius:20px; font-size:0.85rem; font-weight:700; margin-bottom:16px; }
+.question-text {
+  font-size:1.5rem; font-weight:700; line-height:1.5;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px; padding:28px; margin:20px 0;
+  font-family:'Georgia',serif; letter-spacing:0.3px;
+}
+.token-hint { color:rgba(255,255,255,0.4); font-size:0.9rem; }
+
+/* Estimate input */
+.estimate-section { text-align:center; }
+.estimate-input-wrap { display:flex; gap:12px; justify-content:center; align-items:center; margin:20px 0; }
+.estimate-input {
+  width:160px; padding:16px; text-align:center; font-size:2rem; font-weight:800;
+  background:rgba(255,255,255,0.08); border:2px solid rgba(240,147,251,0.4);
+  border-radius:16px; color:#fff; font-family:'Inter',sans-serif;
+  outline:none; transition:border-color 0.2s;
+}
+.estimate-input:focus { border-color:#f093fb; }
+.estimate-input::-webkit-outer-spin-button, .estimate-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+
+/* Estimates list */
+.estimates-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-top:16px; }
+.estimate-card {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+  border-radius:14px; padding:16px; text-align:center; transition:all 0.3s;
+}
+.estimate-card.winner { background:rgba(240,147,251,0.15); border-color:#f093fb; }
+.estimate-card.best { background:rgba(46,204,113,0.15); border-color:#2ecc71; }
+.estimate-name { font-size:0.9rem; font-weight:600; margin-bottom:6px; }
+.estimate-val { font-size:1.8rem; font-weight:800; }
+.estimate-diff { font-size:0.8rem; color:rgba(255,255,255,0.5); margin-top:4px; }
+.estimate-pts { font-size:0.85rem; font-weight:700; color:#f093fb; margin-top:4px; }
+
+/* Scoreboard */
+.score-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+.score-row:last-child { border:none; }
+.score-rank { font-size:1.2rem; width:30px; text-align:center; }
+.score-dot { width:12px; height:12px; border-radius:50%; }
+.score-name { flex:1; font-weight:600; }
+.score-pts { font-size:1.1rem; font-weight:800; color:#f093fb; }
+.score-bar-wrap { width:100px; }
+.score-bar { height:6px; background:linear-gradient(90deg,#f093fb,#f5576c); border-radius:3px; transition:width 0.4s; }
+
+/* Players */
+.player-item { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; border:1px solid transparent; margin-bottom:6px; transition:all 0.3s; }
+.player-item.active { background:rgba(240,147,251,0.15); border-color:rgba(240,147,251,0.4); }
+.player-dot { width:10px; height:10px; border-radius:50%; }
+.turn-badge { background:linear-gradient(135deg,#f093fb,#f5576c); padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; }
+
+/* Reveal animation */
+.reveal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(12px);
+  z-index:200; display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.reveal-overlay.show { opacity:1; pointer-events:all; }
+.reveal-modal { background:linear-gradient(135deg,#1a0533,#2d0a4e); border:1px solid rgba(255,255,255,0.15); border-radius:24px; padding:40px; max-width:600px; width:100%; text-align:center; }
+.reveal-answer { font-size:4rem; font-weight:800; color:#f093fb; margin:16px 0; }
+.reveal-title { font-size:1.3rem; font-weight:700; margin-bottom:8px; }
+
+/* Join/overlay */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+.overlay.show { opacity:1; pointer-events:all; }
+.modal { background:linear-gradient(135deg,#1a0533,#2d0a4e); border:1px solid rgba(255,255,255,0.15); border-radius:24px; padding:36px; max-width:480px; width:100%; }
+.modal h2 { font-size:1.6rem; font-weight:800; margin-bottom:8px; }
+.modal p { color:rgba(255,255,255,0.6); margin-bottom:24px; }
+.input-group { margin-bottom:16px; }
+.input-group label { display:block; font-size:0.85rem; font-weight:600; color:rgba(255,255,255,0.6); margin-bottom:6px; }
+.input-group input { width:100%; padding:12px 16px; border-radius:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); color:#fff; font-family:'Inter',sans-serif; font-size:1rem; outline:none; transition:border-color 0.2s; }
+.input-group input:focus { border-color:#f093fb; }
+.error-msg { color:#e74c3c; font-size:0.85rem; margin-top:8px; min-height:20px; }
+
+.status-bar { background:rgba(240,147,251,0.1); border:1px solid rgba(240,147,251,0.2); border-radius:10px; padding:10px 14px; font-size:0.9rem; color:#f093fb; font-weight:500; margin-bottom:12px; text-align:center; }
+
+.two-col { display:grid; grid-template-columns:1fr 320px; gap:20px; }
+@media(max-width:768px) { .two-col { grid-template-columns:1fr; } }
+
+.progress-track { background:rgba(255,255,255,0.1); border-radius:10px; height:6px; margin:8px 0 16px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#f093fb,#f5576c); border-radius:10px; transition:width 0.4s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="index.html" style="color:rgba(255,255,255,0.6);text-decoration:none;font-size:1.5rem">←</a>
+    <div class="logo">🎰 Token Roulette</div>
+  </div>
+  <div style="font-size:0.9rem;color:rgba(255,255,255,0.5)">Round <span id="roundNum">0</span>/10</div>
+  <button class="btn btn-secondary" onclick="leaveGame()">Quitter</button>
+</header>
+
+<!-- Join -->
+<div class="overlay show" id="joinOverlay">
+  <div class="modal">
+    <h2>🎰 Token Roulette</h2>
+    <p>Estimez le nombre de tokens dans des phrases. Plus vous êtes précis, plus vous scorez !</p>
+    <div class="input-group">
+      <label>Votre nom</label>
+      <input type="text" id="nameInput" placeholder="Ex: Bob" maxlength="20" autocomplete="off">
+    </div>
+    <div class="error-msg" id="joinError"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px;padding:14px" onclick="joinGame()">Rejoindre →</button>
+  </div>
+</div>
+
+<!-- Reveal -->
+<div class="reveal-overlay" id="revealOverlay">
+  <div class="reveal-modal">
+    <div id="revealText" class="reveal-title"></div>
+    <div class="reveal-answer" id="revealAnswer"></div>
+    <div id="revealSubtitle" style="color:rgba(255,255,255,0.5);margin-bottom:24px"></div>
+    <div class="estimates-grid" id="revealEstimates"></div>
+    <div style="margin-top:24px;display:flex;align-items:center;gap:20px;justify-content:center">
+      <button class="btn btn-primary" style="padding:12px 28px" id="revealNextBtn" onclick="nextRound()">Round suivant →</button>
+      <div style="text-align:center">
+        <div id="trCountdown" style="font-size:2.2rem;font-weight:800;color:#f093fb;line-height:1">7</div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4)">secondes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div class="overlay" id="gameOverOverlay">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:3rem;margin-bottom:12px">🏆</div>
+    <h2 id="winnerName">Victoire !</h2>
+    <p style="margin-bottom:24px">a remporté la Token Roulette !</p>
+    <div id="finalScores" style="margin-bottom:24px"></div>
+    <button class="btn btn-primary" style="padding:12px 32px" onclick="resetGame()">Rejouer</button>
+    <a href="index.html" class="btn btn-secondary" style="display:inline-block;margin-top:10px;padding:12px 32px;text-decoration:none">Accueil</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="status-bar" id="statusBar">En attente de joueurs...</div>
+  <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+
+  <div class="two-col">
+    <div>
+      <!-- Current question -->
+      <div class="panel">
+        <div class="round-header">
+          <div class="round-badge" id="roundBadge">Round 0 / 10</div>
+          <div class="question-text" id="questionText">En attente du début de la partie...</div>
+          <div class="token-hint">💡 1 token ≈ 4 caractères en anglais, ~3 en français</div>
+        </div>
+      </div>
+
+      <!-- Estimate input -->
+      <div class="panel estimate-section" id="estimateSection" style="display:none">
+        <div class="panel-title">Votre estimation</div>
+        <div id="estimateStatus" style="color:rgba(255,255,255,0.6);font-size:0.9rem;margin-bottom:12px"></div>
+        <div class="estimate-input-wrap">
+          <button class="btn btn-secondary" onclick="adjustEst(-1)" style="font-size:1.4rem;padding:10px 16px">−</button>
+          <input type="number" class="estimate-input" id="estimateInput" value="5" min="1" max="999">
+          <button class="btn btn-secondary" onclick="adjustEst(1)" style="font-size:1.4rem;padding:10px 16px">+</button>
+        </div>
+        <button class="btn btn-primary" id="submitEstBtn" style="padding:12px 40px;font-size:1rem" onclick="submitEstimate()">
+          Soumettre mon estimation
+        </button>
+      </div>
+
+      <!-- All estimates this round -->
+      <div class="panel" id="estimatesPanel" style="display:none">
+        <div class="panel-title">Estimations du round</div>
+        <div class="estimates-grid" id="estimatesList"></div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Players -->
+      <div class="panel">
+        <div class="panel-title">Joueurs <span style="color:#f093fb" id="playerCount">(0/6)</span></div>
+        <div id="playersList"></div>
+      </div>
+      <!-- Scoreboard -->
+      <div class="panel">
+        <div class="panel-title">Classement</div>
+        <div id="scoreboard"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const TABLE_ID = 'token-roulette';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let state = { session: null, players: [], myPlayer: null, submitted: false };
+
+function isHost() {
+  if (!state.myPlayer) return false;
+  const active = state.players.filter(p => p.is_active);
+  if (!active.length) return false;
+  const minOrder = Math.min(...active.map(p => p.turn_order));
+  return state.myPlayer.turn_order === minOrder;
+}
+
+let revealTimer = null;
+function startRevealCountdown() {
+  clearRevealTimer();
+  let t = 7;
+  document.getElementById('trCountdown').textContent = t;
+  revealTimer = setInterval(() => {
+    t--;
+    document.getElementById('trCountdown').textContent = t;
+    if (t <= 0) { clearRevealTimer(); if (isHost()) nextRound(); }
+  }, 1000);
+}
+function clearRevealTimer() { if (revealTimer) { clearInterval(revealTimer); revealTimer = null; } }
+
+// ============================================================
+// JOIN
+// ============================================================
+async function joinGame() {
+  const name = document.getElementById('nameInput').value.trim();
+  const err = document.getElementById('joinError');
+  if (!name) { err.textContent = 'Entrez votre nom.'; return; }
+
+  const savedId = localStorage.getItem('tr_player');
+  const savedName = localStorage.getItem('tr_name');
+
+  try {
+    let session;
+    const { data: existing } = await sb.from('game_sessions').select('*')
+      .eq('table_id', TABLE_ID).eq('game_type', 'token_roulette').neq('status', 'finished')
+      .order('created_at', { ascending: false }).limit(1).single();
+
+    if (existing) {
+      const { count } = await sb.from('players').select('*', { count: 'exact', head: true })
+        .eq('session_id', existing.id).eq('is_active', true);
+      if ((count || 0) === 0) {
+        await sb.from('game_sessions').update({ status: 'finished' }).eq('id', existing.id);
+      } else {
+        session = existing;
+      }
+    }
+    if (!session) {
+      const { data: ns } = await sb.from('game_sessions').insert({
+        game_type: 'token_roulette', table_id: TABLE_ID, status: 'waiting',
+        game_data: { estimates: {}, round_estimates: {} }
+      }).select().single();
+      session = ns;
+    }
+
+    // Returning player
+    if (savedId && savedName === name) {
+      const { data: ret } = await sb.from('players').select('*').eq('id', savedId).single();
+      if (ret && ret.session_id === session.id) {
+        state.myPlayer = ret; state.session = session;
+        document.getElementById('joinOverlay').classList.remove('show');
+        await loadGameState(); subscribeRealtime(); return;
+      }
+    }
+
+    const { data: allP } = await sb.from('players').select('*').eq('session_id', session.id);
+    if (allP?.find(p => p.name.toLowerCase() === name.toLowerCase() && p.is_active)) { err.textContent = 'Nom déjà pris.'; return; }
+    if (allP?.filter(p=>p.is_active).length >= 6) { err.textContent = 'Partie complète (6/6).'; return; }
+
+    const to = allP?.length || 0;
+    const { data: player } = await sb.from('players').insert({
+      session_id: session.id, name, color: PLAYER_COLORS[to % 6], turn_order: to, score: 0
+    }).select().single();
+
+    localStorage.setItem('tr_player', player.id);
+    localStorage.setItem('tr_name', name);
+    state.myPlayer = player; state.session = session;
+    document.getElementById('joinOverlay').classList.remove('show');
+    await loadGameState(); subscribeRealtime();
+  } catch(e) { err.textContent = 'Erreur: ' + e.message; }
+}
+document.getElementById('nameInput').addEventListener('keypress', e => { if(e.key==='Enter') joinGame(); });
+
+// ============================================================
+// STATE
+// ============================================================
+async function loadGameState() {
+  const { data: sess } = await sb.from('game_sessions').select('*').eq('id', state.session.id).single();
+  if (sess) state.session = sess;
+  const { data: players } = await sb.from('players').select('*').eq('session_id', state.session.id).order('turn_order');
+  if (players) state.players = players;
+  if (state.myPlayer) {
+    const me = players?.find(p => p.id === state.myPlayer.id);
+    if (me) state.myPlayer = me;
+  }
+  await fixStaleSession();
+  renderAll();
+}
+
+async function fixStaleSession() {
+  if (!state.myPlayer || state.session?.status !== 'playing') return;
+  const active = state.players.filter(p => p.is_active);
+  if (active.find(p => p.id === state.session.current_player_id)) return;
+  const sorted = [...active].sort((a, b) => a.turn_order - b.turn_order);
+  if (!sorted.length || sorted[0].id !== state.myPlayer.id) return;
+  if (active.length <= 1) {
+    await sb.from('game_sessions').update({ status: 'waiting', current_player_id: null }).eq('id', state.session.id);
+    state.session.status = 'waiting';
+    state.session.current_player_id = null;
+  } else {
+    await sb.from('game_sessions').update({ current_player_id: sorted[0].id }).eq('id', state.session.id);
+    state.session.current_player_id = sorted[0].id;
+  }
+}
+
+function renderAll() {
+  renderPlayers();
+  renderScoreboard();
+  updateStatusBar();
+  renderCurrentQuestion();
+  renderEstimates();
+  updateRoundDisplay();
+}
+
+function renderPlayers() {
+  const list = document.getElementById('playersList');
+  const count = document.getElementById('playerCount');
+  const active = state.players.filter(p => p.is_active);
+  count.textContent = `(${active.length}/6)`;
+  const sess = state.session;
+  list.innerHTML = active.map(p => {
+    const isActive = sess?.current_player_id === p.id && sess?.status === 'playing';
+    const isMe = p.id === state.myPlayer?.id;
+    const roundEsts = sess?.game_data?.round_estimates || {};
+    const hasSubmitted = !!roundEsts[p.id];
+    return `<div class="player-item ${isActive?'active':''}">
+      <div class="player-dot" style="background:${p.color}"></div>
+      <div style="flex:1;font-size:0.95rem;font-weight:600">${p.name}${isMe?' (moi)':''}</div>
+      ${hasSubmitted ? '<span style="color:#2ecc71;font-size:1rem">✓</span>' : ''}
+      ${isActive ? '<span class="turn-badge">TOUR</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderScoreboard() {
+  const el = document.getElementById('scoreboard');
+  const sorted = [...state.players].filter(p=>p.is_active).sort((a,b) => b.score - a.score);
+  const maxScore = sorted[0]?.score || 1;
+  const ranks = ['🥇','🥈','🥉'];
+  el.innerHTML = sorted.map((p,i) => `
+    <div class="score-row">
+      <div class="score-rank">${ranks[i] || (i+1)}</div>
+      <div class="score-dot" style="background:${p.color}"></div>
+      <div class="score-name">${p.name}</div>
+      <div class="score-bar-wrap"><div class="score-bar" style="width:${(p.score/maxScore)*100}%"></div></div>
+      <div class="score-pts">${p.score} pts</div>
+    </div>`).join('');
+}
+
+function updateRoundDisplay() {
+  const round = state.session?.current_round || 0;
+  document.getElementById('roundNum').textContent = round;
+  document.getElementById('roundBadge').textContent = `Round ${round} / 10`;
+  document.getElementById('progFill').style.width = `${(round/10)*100}%`;
+}
+
+function renderCurrentQuestion() {
+  const sess = state.session;
+  if (!sess || sess.status === 'waiting') {
+    document.getElementById('questionText').textContent = 'En attente du début de la partie...';
+    document.getElementById('estimateSection').style.display = 'none';
+    return;
+  }
+  const idx = sess.current_question_index;
+  if (idx >= TOKEN_ROULETTE_QUESTIONS.length) return;
+  const q = TOKEN_ROULETTE_QUESTIONS[idx];
+  document.getElementById('questionText').textContent = `"${q.text}"`;
+}
+
+function renderEstimates() {
+  const sess = state.session;
+  if (!sess || sess.status === 'waiting') return;
+  const roundEsts = sess.game_data?.round_estimates || {};
+  const activeIds = state.players.filter(p=>p.is_active).map(p=>p.id);
+  const entries = Object.entries(roundEsts).filter(([id]) => activeIds.includes(id));
+
+  const isMyTurn = sess.current_player_id === state.myPlayer?.id;
+  const hasSubmitted = !!roundEsts[state.myPlayer?.id];
+
+  document.getElementById('estimateSection').style.display = (sess.status === 'playing') ? 'block' : 'none';
+  document.getElementById('submitEstBtn').disabled = !isMyTurn || hasSubmitted;
+
+  let statusText = '';
+  if (hasSubmitted) statusText = '✅ Estimation soumise !';
+  else if (isMyTurn) statusText = '🎯 C\'est votre tour d\'estimer !';
+  else {
+    const curr = state.players.find(p => p.id === sess.current_player_id);
+    statusText = `⏳ En attente de ${curr?.name || '...'} — ${entries.length}/${activeIds.length} estimations`;
+  }
+  document.getElementById('estimateStatus').textContent = statusText;
+
+  if (entries.length > 0) {
+    document.getElementById('estimatesPanel').style.display = 'block';
+    const idx = sess.current_question_index;
+    const correctTokens = TOKEN_ROULETTE_QUESTIONS[idx]?.tokens;
+    const sorted = entries.map(([id, val]) => {
+      const p = state.players.find(x => x.id === id);
+      const diff = correctTokens ? Math.abs(val - correctTokens) : null;
+      return { name: p?.name || '?', color: p?.color || '#fff', val, diff };
+    }).sort((a,b) => (a.diff||999) - (b.diff||999));
+
+    document.getElementById('estimatesList').innerHTML = sorted.map((e, i) => `
+      <div class="estimate-card ${i===0?'best':''}">
+        <div class="estimate-name">${e.name}</div>
+        <div class="estimate-val" style="color:${e.color}">${e.val}</div>
+        ${e.diff !== null ? `<div class="estimate-diff">± ${e.diff} tokens</div>` : ''}
+      </div>`).join('');
+  } else {
+    document.getElementById('estimatesPanel').style.display = 'none';
+  }
+}
+
+function updateStatusBar() {
+  const bar = document.getElementById('statusBar');
+  const sess = state.session;
+  if (!sess) return;
+  if (sess.status === 'waiting') {
+    const cnt = state.players.filter(p=>p.is_active).length;
+    bar.textContent = cnt < 2 ? `${cnt}/6 joueurs — Minimum 2 requis.` : `${cnt} joueurs prêts !`;
+    if (cnt >= 2 && isHost()) {
+      bar.innerHTML += ` <button class="btn btn-primary" style="margin-left:8px;padding:6px 14px;font-size:0.8rem" onclick="startGame()">▶ Démarrer</button>`;
+    }
+  } else if (sess.status === 'playing') {
+    const curr = state.players.find(p => p.id === sess.current_player_id);
+    bar.textContent = curr?.id === state.myPlayer?.id
+      ? `🎯 Votre tour — Round ${sess.current_round}/10`
+      : `⏳ Tour de ${curr?.name} — Round ${sess.current_round}/10`;
+  }
+}
+
+// ============================================================
+// GAME FLOW
+// ============================================================
+async function startGame() {
+  const active = state.players.filter(p=>p.is_active);
+  await sb.from('game_sessions').update({
+    status: 'playing', current_round: 1, current_question_index: 0,
+    current_player_id: active[0].id,
+    game_data: { estimates: {}, round_estimates: {} }
+  }).eq('id', state.session.id);
+}
+
+function adjustEst(delta) {
+  const inp = document.getElementById('estimateInput');
+  inp.value = Math.max(1, Math.min(999, parseInt(inp.value || 5) + delta));
+}
+
+async function submitEstimate() {
+  const val = parseInt(document.getElementById('estimateInput').value) || 5;
+  const sess = state.session;
+  const gd = { ...(sess.game_data || {}), round_estimates: { ...(sess.game_data?.round_estimates || {}) } };
+  gd.round_estimates[state.myPlayer.id] = val;
+
+  await sb.from('game_sessions').update({ game_data: gd }).eq('id', state.session.id);
+  await sb.from('game_events').insert({
+    session_id: state.session.id, player_id: state.myPlayer.id,
+    event_type: 'estimate', event_data: { value: val, round: sess.current_round }
+  });
+
+  // Check if all players have submitted → move to next player or reveal
+  const active = state.players.filter(p=>p.is_active);
+  const allSubmitted = active.every(p => gd.round_estimates[p.id] !== undefined);
+
+  if (!allSubmitted) {
+    // Move to next player
+    const currIdx = active.findIndex(p => p.id === sess.current_player_id);
+    const nextP = active[(currIdx + 1) % active.length];
+    // Skip players who already submitted
+    let nextIdx = (currIdx + 1) % active.length;
+    while (gd.round_estimates[active[nextIdx].id] !== undefined && nextIdx !== currIdx) {
+      nextIdx = (nextIdx + 1) % active.length;
+    }
+    await sb.from('game_sessions').update({ game_data: gd, current_player_id: active[nextIdx].id }).eq('id', state.session.id);
+  } else {
+    // All submitted — only the first player who submitted can trigger reveal
+    // (we use current_player_id === myPlayer to gate reveal)
+    await sb.from('game_sessions').update({ game_data: gd }).eq('id', state.session.id);
+    setTimeout(() => revealAnswers(gd), 500);
+  }
+}
+
+async function revealAnswers(gd) {
+  const sess = state.session;
+  const idx = sess.current_question_index;
+  const q = TOKEN_ROULETTE_QUESTIONS[idx];
+  const correctTokens = q.tokens;
+
+  // Calculate scores
+  const active = state.players.filter(p=>p.is_active);
+  const estimates = gd.round_estimates || {};
+  const scored = active.map(p => {
+    const est = estimates[p.id] || 0;
+    const diff = Math.abs(est - correctTokens);
+    let pts = 0;
+    if (diff === 0) pts = 10;
+    else if (diff <= 1) pts = 8;
+    else if (diff <= 2) pts = 6;
+    else if (diff <= 5) pts = 4;
+    else if (diff <= 10) pts = 2;
+    else pts = 0;
+    return { ...p, est, diff, pts };
+  }).sort((a,b) => a.diff - b.diff);
+
+  // Update scores
+  for (const p of scored) {
+    await sb.from('players').update({ score: p.score + p.pts }).eq('id', p.id);
+  }
+
+  // Show reveal overlay
+  document.getElementById('revealText').textContent = `La réponse était...`;
+  document.getElementById('revealAnswer').textContent = `${correctTokens} tokens`;
+  document.getElementById('revealSubtitle').textContent = `"${q.text}"`;
+  document.getElementById('revealEstimates').innerHTML = scored.map((p,i) => `
+    <div class="estimate-card ${i===0?'best':''}">
+      <div class="estimate-name" style="color:${p.color}">${p.name}</div>
+      <div class="estimate-val">${p.est}</div>
+      <div class="estimate-diff">± ${p.diff} tokens</div>
+      <div class="estimate-pts">+${p.pts} pts</div>
+    </div>`).join('');
+
+  document.getElementById('revealNextBtn').style.display = isHost() ? 'inline-block' : 'none';
+  document.getElementById('revealOverlay').classList.add('show');
+  await loadGameState();
+  startRevealCountdown();
+}
+
+async function nextRound() {
+  clearRevealTimer();
+  document.getElementById('revealOverlay').classList.remove('show');
+  const sess = state.session;
+  const nextR = (sess.current_round || 1) + 1;
+
+  if (nextR > 10 || sess.current_question_index + 1 >= TOKEN_ROULETTE_QUESTIONS.length) {
+    await finishGame();
+    return;
+  }
+  const active = state.players.filter(p=>p.is_active);
+  await sb.from('game_sessions').update({
+    current_round: nextR,
+    current_question_index: sess.current_question_index + 1,
+    current_player_id: active[0].id,
+    game_data: { ...sess.game_data, round_estimates: {} }
+  }).eq('id', state.session.id);
+}
+
+async function finishGame() {
+  const sorted = [...state.players].filter(p=>p.is_active).sort((a,b)=>b.score-a.score);
+  const winner = sorted[0];
+  await sb.from('game_sessions').update({ status: 'finished', game_data: { ...state.session.game_data, winner: winner.name } }).eq('id', state.session.id);
+  await sb.from('game_events').insert({ session_id: state.session.id, event_type: 'game_over', event_data: { winner: winner.name } });
+
+  document.getElementById('winnerName').textContent = winner.name;
+  document.getElementById('finalScores').innerHTML = sorted.map((p,i) =>
+    `<div style="display:flex;align-items:center;gap:10px;margin:8px 0;justify-content:center">
+      <span style="font-size:1.2rem">${['🥇','🥈','🥉'][i]||''}</span>
+      <span style="font-weight:600">${p.name}</span>
+      <span style="color:#f093fb;font-weight:800">${p.score} pts</span>
+    </div>`).join('');
+  document.getElementById('gameOverOverlay').classList.add('show');
+}
+
+async function resetGame() {
+  await sb.from('game_sessions').update({ status: 'finished' }).eq('id', state.session.id);
+  location.reload();
+}
+async function leaveGame() {
+  if (state.myPlayer) await sb.from('players').update({ is_active: false }).eq('id', state.myPlayer.id);
+  window.location.href = 'index.html';
+}
+
+// ============================================================
+// REALTIME
+// ============================================================
+function subscribeRealtime() {
+  sb.channel(`tr-${state.session.id}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${state.session.id}` }, async payload => {
+      if (payload.new.current_round > (state.session?.current_round || 0)) {
+        clearRevealTimer();
+        document.getElementById('revealOverlay').classList.remove('show');
+      }
+      state.session = payload.new;
+      // Check if all estimates submitted by others
+      const gd = payload.new.game_data || {};
+      const active = state.players.filter(p=>p.is_active);
+      const allSub = active.every(p => gd.round_estimates?.[p.id] !== undefined);
+      if (allSub && payload.new.status === 'playing' && state.myPlayer?.turn_order !== 0) {
+        setTimeout(() => revealAnswers(gd), 500);
+      }
+      if (payload.new.status === 'finished' && payload.new.game_data?.winner) {
+        document.getElementById('winnerName').textContent = payload.new.game_data.winner;
+        document.getElementById('gameOverOverlay').classList.add('show');
+      }
+      renderAll();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `session_id=eq.${state.session.id}` }, () => loadGameState())
+    .subscribe();
+}
+
+// Auto-fill saved name
+const sn = localStorage.getItem('tr_name');
+if (sn) document.getElementById('nameInput').value = sn;
+</script>
+</body>
+</html>

@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LudoClaude — Table 5</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #0f0c29;
+  --surface: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.1);
+  --accent1: #667eea;
+  --accent2: #764ba2;
+  --text: #ffffff;
+  --text2: rgba(255,255,255,0.6);
+}
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  min-height: 100vh;
+  color: var(--text);
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { font-size:1.4rem; font-weight:800; background:linear-gradient(135deg,#667eea,#764ba2); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header-right { display:flex; gap:12px; align-items:center; }
+.btn {
+  padding: 8px 20px; border-radius: 10px; border: none; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-primary { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
+.btn-primary:hover { opacity:0.85; transform:translateY(-1px); }
+.btn-secondary { background:var(--surface); border:1px solid var(--border); color:var(--text); }
+.btn-secondary:hover { background:rgba(255,255,255,0.12); }
+.btn:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+
+.main { display:grid; grid-template-columns:1fr 340px; gap:24px; padding:24px; max-width:1400px; margin:0 auto; }
+
+/* Board */
+.board-wrapper { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:24px; }
+.board-title { font-size:1.1rem; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+#board-svg { width:100%; height:auto; display:block; }
+
+/* Sidebar */
+.sidebar { display:flex; flex-direction:column; gap:16px; }
+.panel { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px; }
+.panel-title { font-size:0.85rem; font-weight:600; text-transform:uppercase; letter-spacing:2px; color:var(--text2); margin-bottom:14px; }
+
+/* Players */
+.player-item {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 12px; border-radius:10px;
+  border:1px solid transparent;
+  transition:all 0.3s ease; margin-bottom:8px;
+}
+.player-item.active { background:rgba(102,126,234,0.15); border-color:rgba(102,126,234,0.4); }
+.player-item.me { box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15); }
+.player-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+.player-name { font-size:0.95rem; font-weight:600; flex:1; }
+.player-pos { font-size:0.8rem; color:var(--text2); }
+.player-score { font-size:0.9rem; font-weight:700; }
+.turn-badge {
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:700;
+}
+
+/* Dice */
+.dice-area { text-align:center; }
+#dice-display {
+  font-size:5rem; margin:12px 0;
+  transition:transform 0.3s ease;
+  display:inline-block; cursor:default;
+  filter: drop-shadow(0 4px 12px rgba(102,126,234,0.5));
+}
+#dice-display.rolling { animation:roll 0.5s ease; }
+@keyframes roll {
+  0%,100% { transform:rotate(0deg) scale(1); }
+  25% { transform:rotate(-20deg) scale(1.2); }
+  75% { transform:rotate(20deg) scale(1.2); }
+}
+.dice-value { font-size:1.5rem; font-weight:800; color:#667eea; }
+
+/* Question modal */
+.overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(8px);
+  z-index:200;
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  opacity:0; pointer-events:none; transition:opacity 0.3s ease;
+}
+.overlay.show { opacity:1; pointer-events:all; }
+.modal {
+  background: linear-gradient(135deg, #1a1a3e, #2d1b69);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:24px;
+  padding:36px;
+  max-width:580px;
+  width:100%;
+  transform:scale(0.9);
+  transition:transform 0.3s ease;
+}
+.overlay.show .modal { transform:scale(1); }
+.q-level {
+  display:inline-block; padding:4px 14px; border-radius:20px;
+  font-size:0.78rem; font-weight:700; letter-spacing:1px; margin-bottom:16px;
+}
+.q-level.easy { background:rgba(46,204,113,0.2); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
+.q-level.medium { background:rgba(243,156,18,0.2); color:#f39c12; border:1px solid rgba(243,156,18,0.3); }
+.q-level.hard { background:rgba(231,76,60,0.2); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
+.q-text { font-size:1.15rem; font-weight:600; line-height:1.6; margin-bottom:24px; }
+.q-options { display:flex; flex-direction:column; gap:10px; }
+.q-option {
+  padding:14px 18px; border-radius:12px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.05);
+  cursor:pointer; transition:all 0.2s ease;
+  font-size:0.95rem; text-align:left;
+  color:#fff; font-family:'Inter',sans-serif;
+}
+.q-option:hover:not(:disabled) { background:rgba(102,126,234,0.2); border-color:#667eea; }
+.q-option.correct { background:rgba(46,204,113,0.2) !important; border-color:#2ecc71 !important; }
+.q-option.wrong { background:rgba(231,76,60,0.2) !important; border-color:#e74c3c !important; }
+.q-option:disabled { cursor:default; }
+.q-result { margin-top:20px; padding:14px; border-radius:12px; text-align:center; font-weight:600; font-size:1rem; display:none; }
+.q-result.show { display:block; }
+.q-result.good { background:rgba(46,204,113,0.15); color:#2ecc71; border:1px solid rgba(46,204,113,0.3); }
+.q-result.bad { background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); }
+
+/* Join modal */
+.join-modal { max-width:440px; }
+.join-modal h2 { font-size:1.6rem; font-weight:800; margin-bottom:8px; }
+.join-modal p { color:var(--text2); margin-bottom:24px; font-size:0.95rem; }
+.input-group { margin-bottom:16px; }
+.input-group label { display:block; font-size:0.85rem; font-weight:600; color:var(--text2); margin-bottom:6px; }
+.input-group input {
+  width:100%; padding:12px 16px; border-radius:10px;
+  background:rgba(255,255,255,0.08); border:1px solid var(--border);
+  color:#fff; font-family:'Inter',sans-serif; font-size:1rem;
+  outline:none; transition:border-color 0.2s;
+}
+.input-group input:focus { border-color:#667eea; }
+.error-msg { color:#e74c3c; font-size:0.85rem; margin-top:8px; min-height:20px; }
+
+/* Game over */
+.winner-banner {
+  text-align:center; padding:20px;
+}
+.winner-banner .trophy { font-size:4rem; }
+.winner-banner h2 { font-size:1.8rem; font-weight:800; margin:12px 0 4px; }
+
+/* Status */
+.status-bar {
+  background:rgba(102,126,234,0.1); border:1px solid rgba(102,126,234,0.2);
+  border-radius:10px; padding:10px 14px; font-size:0.9rem; color:#667eea; font-weight:500;
+  margin-bottom:12px; text-align:center; min-height:42px;
+}
+
+/* Progress bar */
+.progress-wrap { margin-bottom:12px; }
+.progress-label { display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text2); margin-bottom:6px; }
+.progress-track { background:rgba(255,255,255,0.1); border-radius:10px; height:8px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#667eea,#764ba2); border-radius:10px; transition:width 0.4s ease; }
+
+/* Log */
+.log-area { max-height:180px; overflow-y:auto; }
+.log-item { font-size:0.82rem; color:var(--text2); padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.log-item:last-child { border:none; }
+.log-item span { color:#667eea; font-weight:600; }
+
+@media(max-width:900px) {
+  .main { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="index.html" style="color:var(--text2);text-decoration:none;font-size:1.5rem">←</a>
+    <div class="logo">🎲 LudoClaude</div>
+  </div>
+  <div style="font-size:1rem;font-weight:600;color:var(--text2)">Table <span id="tableNum">1</span></div>
+  <div class="header-right">
+    <span id="statusDot" style="color:var(--text2);font-size:0.85rem">⚡ Temps réel</span>
+    <button class="btn btn-secondary" onclick="leaveGame()">Quitter</button>
+  </div>
+</header>
+
+<!-- Join Overlay -->
+<div class="overlay show" id="joinOverlay">
+  <div class="modal join-modal">
+    <h2>🎲 Rejoindre la table</h2>
+    <p>Entrez votre nom pour rejoindre la table Ludo <span id="joinTableNum">1</span>. 6 joueurs max.</p>
+    <div class="input-group">
+      <label>Votre nom</label>
+      <input type="text" id="nameInput" placeholder="Ex: Alice" maxlength="20" autocomplete="off">
+    </div>
+    <div class="error-msg" id="joinError"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px;padding:14px" onclick="joinGame()">Rejoindre →</button>
+  </div>
+</div>
+
+<!-- Question Overlay -->
+<div class="overlay" id="questionOverlay">
+  <div class="modal">
+    <div id="qLevel" class="q-level easy">FACILE</div>
+    <div id="qDiceInfo" style="font-size:0.9rem;color:var(--text2);margin-bottom:12px"></div>
+    <div class="q-text" id="qText"></div>
+    <div class="q-options" id="qOptions"></div>
+    <div class="q-result" id="qResult"></div>
+  </div>
+</div>
+
+<!-- Game Over Overlay -->
+<div class="overlay" id="gameOverOverlay">
+  <div class="modal">
+    <div class="winner-banner">
+      <div class="trophy">🏆</div>
+      <h2 id="winnerName">Victoire !</h2>
+      <p style="color:var(--text2);margin-top:8px">a atteint la case 60 !</p>
+      <button class="btn btn-primary" style="margin-top:24px;padding:12px 32px" onclick="resetGame()">Nouvelle partie</button>
+      <a href="index.html" class="btn btn-secondary" style="display:inline-block;margin-top:12px;padding:12px 32px;text-decoration:none">Retour à l'accueil</a>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="board-wrapper">
+    <div class="board-title">🎯 Plateau Ludo — 52 cases</div>
+    <svg id="board-svg" viewBox="0 0 520 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color:#1a1a3e"/>
+          <stop offset="100%" style="stop-color:#0d0d26"/>
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Background -->
+      <rect width="700" height="700" fill="url(#bgGrad)" rx="20"/>
+      <g id="board-cells"></g>
+      <g id="player-tokens"></g>
+    </svg>
+  </div>
+
+  <div class="sidebar">
+    <div class="panel">
+      <div class="panel-title">État de la partie</div>
+      <div class="status-bar" id="statusBar">En attente de joueurs...</div>
+      <div class="progress-wrap" id="myProgress" style="display:none">
+        <div class="progress-label"><span>Ma progression</span><span id="myPosLabel">0/52</span></div>
+        <div class="progress-track"><div class="progress-fill" id="myProgFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Joueurs <span style="color:#667eea" id="playerCount">(0/6)</span></div>
+      <div id="playersList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Dé</div>
+      <div class="dice-area">
+        <div id="dice-display">⬜</div>
+        <button class="btn btn-primary" id="rollBtn" style="width:100%;padding:14px" onclick="rollDice()" disabled>
+          🎲 Lancer le dé
+        </button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Journal</div>
+      <div class="log-area" id="logArea"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+// ============================================================
+// INIT
+// ============================================================
+const TABLE_ID = 'ludo-table-' + (window.location.pathname.match(/ludo-table-(\d)/) || ['','1'])[1];
+const TABLE_NUM = TABLE_ID.split('-').pop();
+document.getElementById('tableNum').textContent = TABLE_NUM;
+document.getElementById('joinTableNum').textContent = TABLE_NUM;
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let state = {
+  session: null,
+  players: [],
+  myPlayer: null,
+  currentDice: 0,
+  questionShown: false,
+  waitingForAnswer: false,
+};
+
+function isHost() {
+  if (!state.myPlayer) return false;
+  const active = state.players.filter(p => p.is_active);
+  if (!active.length) return false;
+  const minOrder = Math.min(...active.map(p => p.turn_order));
+  return state.myPlayer.turn_order === minOrder;
+}
+
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+// ============================================================
+// BOARD RENDERING — Classic Ludo Cross
+// ============================================================
+const CS = 34, OX = 5, OY = 5;
+const BOARD_CELLS_COUNT = 52;
+
+function cc(col, row) {
+  return { x: OX + col * CS + CS / 2, y: OY + row * CS + CS / 2 };
+}
+
+function getLudoPath() {
+  const p = [];
+  p.push([6,0],[7,0],[8,0]);                          // top arm top →
+  for (let r = 1; r <= 5; r++) p.push([8, r]);        // top arm right ↓
+  for (let c = 9; c <= 14; c++) p.push([c, 6]);       // right arm top →
+  p.push([14,7],[14,8]);                              // right arm right ↓
+  for (let c = 13; c >= 9; c--) p.push([c, 8]);       // right arm bottom ←
+  for (let r = 9; r <= 13; r++) p.push([8, r]);        // bottom arm right ↓
+  p.push([8,14],[7,14],[6,14]);                        // bottom arm bottom ←
+  for (let r = 13; r >= 9; r--) p.push([6, r]);        // bottom arm left ↑
+  for (let c = 5; c >= 0; c--) p.push([c, 8]);         // left arm bottom ←
+  p.push([0,7],[0,6]);                                 // left arm left ↑
+  for (let c = 1; c <= 5; c++) p.push([c, 6]);         // left arm top →
+  for (let r = 5; r >= 1; r--) p.push([6, r]);         // top arm left ↑
+  return p;
+}
+
+const LUDO_PATH = getLudoPath();
+
+const ARM = { top:'#3498db', right:'#e74c3c', bottom:'#2ecc71', left:'#f39c12' };
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+  return el;
+}
+
+function pathColor(i) {
+  if (i < 8)  return ARM.top;
+  if (i < 20) return ARM.right;
+  if (i < 32) return ARM.bottom;
+  if (i < 44) return ARM.left;
+  return ARM.top;
+}
+
+function buildBoard() {
+  const g = document.getElementById('board-cells');
+  g.innerHTML = '';
+  const cs = CS, ox = OX, oy = OY;
+
+  // Corner homes
+  const homes = [
+    { col:0, row:0, color:ARM.top },
+    { col:9, row:0, color:ARM.right },
+    { col:0, row:9, color:ARM.left },
+    { col:9, row:9, color:ARM.bottom },
+  ];
+  for (const h of homes) {
+    const x = ox+h.col*cs, y = oy+h.row*cs;
+    g.appendChild(svgEl('rect',{x,y,width:cs*6,height:cs*6,fill:h.color,opacity:0.1,rx:8}));
+    g.appendChild(svgEl('rect',{x,y,width:cs*6,height:cs*6,fill:'none',stroke:h.color,'stroke-width':2,rx:8,opacity:0.5}));
+    const icx=x+cs*3, icy=y+cs*3;
+    g.appendChild(svgEl('ellipse',{cx:icx,cy:icy,rx:cs*1.9,ry:cs*1.9,fill:h.color,opacity:0.18}));
+    for (const [dc,dr] of [[1.5,1.5],[4.5,1.5],[1.5,4.5],[4.5,4.5]]) {
+      g.appendChild(svgEl('circle',{cx:x+dc*cs,cy:y+dr*cs,r:cs*0.38,fill:h.color,opacity:0.5,stroke:'white','stroke-width':0.8}));
+    }
+  }
+
+  // Cross background
+  for (let r=0;r<=14;r++) for (let c=0;c<=14;c++) {
+    if (!((r>=6&&r<=8)||(c>=6&&c<=8))) continue;
+    g.appendChild(svgEl('rect',{x:ox+c*cs,y:oy+r*cs,width:cs,height:cs,
+      fill:'rgba(255,255,255,0.03)',stroke:'rgba(255,255,255,0.07)','stroke-width':0.5}));
+  }
+
+  // Home stretch lanes (decorative)
+  [[7,1],[7,2],[7,3],[7,4],[7,5]].forEach(([c,r])=>
+    g.appendChild(svgEl('rect',{x:ox+c*cs+3,y:oy+r*cs+3,width:cs-6,height:cs-6,fill:ARM.top,opacity:0.22,rx:2})));
+  [[7,9],[7,10],[7,11],[7,12],[7,13]].forEach(([c,r])=>
+    g.appendChild(svgEl('rect',{x:ox+c*cs+3,y:oy+r*cs+3,width:cs-6,height:cs-6,fill:ARM.bottom,opacity:0.22,rx:2})));
+  [[1,7],[2,7],[3,7],[4,7],[5,7]].forEach(([c,r])=>
+    g.appendChild(svgEl('rect',{x:ox+c*cs+3,y:oy+r*cs+3,width:cs-6,height:cs-6,fill:ARM.left,opacity:0.22,rx:2})));
+  [[9,7],[10,7],[11,7],[12,7],[13,7]].forEach(([c,r])=>
+    g.appendChild(svgEl('rect',{x:ox+c*cs+3,y:oy+r*cs+3,width:cs-6,height:cs-6,fill:ARM.right,opacity:0.22,rx:2})));
+
+  // Path cells
+  LUDO_PATH.forEach(([col,row],i) => {
+    const x=ox+col*cs+1, y=oy+row*cs+1, color=pathColor(i);
+    const isStart=i===0, isEnd=i===51;
+    g.appendChild(svgEl('rect',{x,y,width:cs-2,height:cs-2,
+      fill:isStart?color:isEnd?'#f1c40f':`${color}2a`,
+      stroke:isStart?color:isEnd?'#f1c40f':`${color}88`,
+      'stroke-width':isStart||isEnd?2.5:1,rx:3,id:`cell-${i}`}));
+    if (isStart) {
+      const p=cc(col,row);
+      const t=svgEl('text',{x:p.x,y:p.y+4,'text-anchor':'middle',fill:'white','font-size':8,'font-weight':'bold','font-family':'Inter'});
+      t.textContent='GO'; g.appendChild(t);
+    } else if (isEnd) {
+      const p=cc(col,row);
+      const t=svgEl('text',{x:p.x,y:p.y+5,'text-anchor':'middle',fill:'#333','font-size':12,'font-family':'Inter'});
+      t.textContent='★'; g.appendChild(t);
+    } else if (i%13===0) {
+      const p=cc(col,row);
+      const t=svgEl('text',{x:p.x,y:p.y+4,'text-anchor':'middle',fill:color,'font-size':8,'font-weight':'700','font-family':'Inter'});
+      t.textContent=String(i); g.appendChild(t);
+    }
+  });
+
+  // Center star
+  const cxc=ox+7*cs+cs/2, cyc=oy+7*cs+cs/2;
+  const pts=[];
+  for(let i=0;i<12;i++){const r2=i%2===0?cs*1.55:cs*0.65,a=(i*Math.PI/6)-Math.PI/2;pts.push(`${cxc+r2*Math.cos(a)},${cyc+r2*Math.sin(a)}`);}
+  g.appendChild(svgEl('polygon',{points:pts.join(' '),fill:'gold',opacity:0.22}));
+  g.appendChild(svgEl('polygon',{points:pts.join(' '),fill:'none',stroke:'gold','stroke-width':1,opacity:0.5}));
+}
+
+function getCellPos(i) {
+  const [col,row] = LUDO_PATH[Math.min(i, LUDO_PATH.length-1)];
+  return cc(col, row);
+}
+
+function renderTokens() {
+  const g = document.getElementById('player-tokens');
+  g.innerHTML = '';
+  state.players.forEach((p, idx) => {
+    if (!p.is_active) return;
+    const pos = getCellPos(Math.min(p.position, 51));
+    const offset = (idx % 3) * 14 - 14;
+    const rowOff = idx < 3 ? -8 : 8;
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', pos.x + offset);
+    circle.setAttribute('cy', pos.y + rowOff);
+    circle.setAttribute('r','10');
+    circle.setAttribute('fill', p.color || PLAYER_COLORS[idx % 6]);
+    circle.setAttribute('stroke','white');
+    circle.setAttribute('stroke-width','2');
+    if (p.id === state.myPlayer?.id) circle.setAttribute('filter','url(#glow)');
+
+    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x', pos.x + offset);
+    txt.setAttribute('y', pos.y + rowOff + 4);
+    txt.setAttribute('text-anchor','middle');
+    txt.setAttribute('fill','white');
+    txt.setAttribute('font-size','9');
+    txt.setAttribute('font-weight','800');
+    txt.setAttribute('font-family','Inter');
+    txt.textContent = p.name.charAt(0).toUpperCase();
+
+    g.appendChild(circle);
+    g.appendChild(txt);
+  });
+}
+
+// ============================================================
+// JOIN GAME
+// ============================================================
+async function joinGame() {
+  const name = document.getElementById('nameInput').value.trim();
+  const err = document.getElementById('joinError');
+  if (!name) { err.textContent = 'Entrez votre nom.'; return; }
+
+  // Check localStorage for persistence
+  const savedId = localStorage.getItem(`ludo_player_${TABLE_ID}`);
+  const savedName = localStorage.getItem(`ludo_name_${TABLE_ID}`);
+
+  try {
+    // Get or create session
+    let session;
+    const { data: existing } = await sb
+      .from('game_sessions')
+      .select('*')
+      .eq('table_id', TABLE_ID)
+      .eq('game_type', 'ludo')
+      .neq('status', 'finished')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (existing) {
+      const { count } = await sb.from('players').select('*', { count: 'exact', head: true })
+        .eq('session_id', existing.id).eq('is_active', true);
+      if ((count || 0) === 0) {
+        await sb.from('game_sessions').update({ status: 'finished' }).eq('id', existing.id);
+      } else {
+        session = existing;
+      }
+    }
+    if (!session) {
+      const { data: newSess, error } = await sb.from('game_sessions').insert({
+        game_type: 'ludo', table_id: TABLE_ID, status: 'waiting',
+        game_data: { dice_rolls: [] }
+      }).select().single();
+      if (error) throw error;
+      session = newSess;
+    }
+
+    // Check if returning player
+    if (savedId && savedName === name) {
+      const { data: returning } = await sb.from('players').select('*').eq('id', savedId).single();
+      if (returning && returning.session_id === session.id) {
+        state.myPlayer = returning;
+        state.session = session;
+        document.getElementById('joinOverlay').classList.remove('show');
+        await loadGameState();
+        subscribeRealtime();
+        return;
+      }
+    }
+
+    // Check name uniqueness in session
+    const { data: allPlayers } = await sb.from('players').select('*').eq('session_id', session.id);
+    const nameTaken = allPlayers?.find(p => p.name.toLowerCase() === name.toLowerCase() && p.is_active);
+    if (nameTaken) { err.textContent = 'Ce nom est déjà pris dans cette table.'; return; }
+    if (allPlayers && allPlayers.filter(p=>p.is_active).length >= 6) { err.textContent = 'Table complète (6/6). Essayez une autre table.'; return; }
+
+    const turnOrder = (allPlayers?.length || 0);
+    const color = PLAYER_COLORS[turnOrder % 6];
+    const { data: player, error: pErr } = await sb.from('players').insert({
+      session_id: session.id, name, color, turn_order: turnOrder, position: 0, score: 0
+    }).select().single();
+    if (pErr) throw pErr;
+
+    localStorage.setItem(`ludo_player_${TABLE_ID}`, player.id);
+    localStorage.setItem(`ludo_name_${TABLE_ID}`, name);
+    state.myPlayer = player;
+    state.session = session;
+    document.getElementById('joinOverlay').classList.remove('show');
+    await loadGameState();
+    subscribeRealtime();
+    addLog(`<span>${name}</span> a rejoint la table !`);
+
+  } catch(e) {
+    err.textContent = 'Erreur : ' + e.message;
+  }
+}
+
+document.getElementById('nameInput').addEventListener('keypress', e => { if(e.key==='Enter') joinGame(); });
+
+// ============================================================
+// LOAD STATE
+// ============================================================
+async function loadGameState() {
+  const { data: sess } = await sb.from('game_sessions').select('*').eq('id', state.session.id).single();
+  if (sess) state.session = sess;
+  const { data: players } = await sb.from('players').select('*').eq('session_id', state.session.id).order('turn_order');
+  if (players) state.players = players;
+  if (state.myPlayer) {
+    const me = players?.find(p => p.id === state.myPlayer.id);
+    if (me) state.myPlayer = me;
+  }
+  await fixStaleSession();
+  renderAll();
+}
+
+async function fixStaleSession() {
+  if (!state.myPlayer || state.session?.status !== 'playing') return;
+  const active = state.players.filter(p => p.is_active);
+  if (active.find(p => p.id === state.session.current_player_id)) return; // already valid
+  const sorted = [...active].sort((a, b) => a.turn_order - b.turn_order);
+  if (!sorted.length || sorted[0].id !== state.myPlayer.id) return; // only lowest turn_order acts
+  if (active.length <= 1) {
+    await sb.from('game_sessions').update({ status: 'waiting', current_player_id: null }).eq('id', state.session.id);
+    state.session.status = 'waiting';
+    state.session.current_player_id = null;
+  } else {
+    await sb.from('game_sessions').update({ current_player_id: sorted[0].id }).eq('id', state.session.id);
+    state.session.current_player_id = sorted[0].id;
+  }
+}
+
+function renderAll() {
+  renderTokens();
+  renderPlayers();
+  updateStatusBar();
+  updateRollBtn();
+  updateMyProgress();
+}
+
+function renderPlayers() {
+  const list = document.getElementById('playersList');
+  const count = document.getElementById('playerCount');
+  const active = state.players.filter(p => p.is_active);
+  count.textContent = `(${active.length}/6)`;
+  list.innerHTML = active.map(p => {
+    const isActive = state.session?.current_player_id === p.id;
+    const isMe = p.id === state.myPlayer?.id;
+    return `<div class="player-item ${isActive?'active':''} ${isMe?'me':''}">
+      <div class="player-dot" style="background:${p.color}"></div>
+      <div class="player-name">${p.name}${isMe?' (moi)':''}</div>
+      <div class="player-pos">Case ${p.position}</div>
+      ${isActive ? '<span class="turn-badge">TOUR</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function updateStatusBar() {
+  const bar = document.getElementById('statusBar');
+  const sess = state.session;
+  if (!sess) return;
+  if (sess.status === 'waiting') {
+    const cnt = state.players.filter(p=>p.is_active).length;
+    bar.textContent = cnt < 2
+      ? `En attente... (${cnt}/6 joueurs). Minimum 2 pour jouer.`
+      : `${cnt} joueurs prêts. Attendez d'autres ou lancez la partie !`;
+    if (cnt >= 2 && isHost()) {
+      bar.innerHTML += ` <button class="btn btn-primary" style="margin-left:8px;padding:6px 14px;font-size:0.8rem" onclick="startGame()">▶ Démarrer</button>`;
+    }
+  } else if (sess.status === 'playing') {
+    const curr = state.players.find(p => p.id === sess.current_player_id);
+    if (curr?.id === state.myPlayer?.id) {
+      bar.textContent = '🎲 C\'est votre tour ! Lancez le dé.';
+      bar.style.color = '#2ecc71';
+    } else {
+      bar.textContent = `⏳ Tour de ${curr?.name || '...'} — Attendez votre tour.`;
+      bar.style.color = '#667eea';
+    }
+  } else if (sess.status === 'finished') {
+    bar.textContent = '🏆 Partie terminée !';
+  }
+}
+
+function updateRollBtn() {
+  const btn = document.getElementById('rollBtn');
+  const sess = state.session;
+  const isMyTurn = sess?.current_player_id === state.myPlayer?.id;
+  btn.disabled = !(sess?.status === 'playing' && isMyTurn && !state.waitingForAnswer);
+}
+
+function updateMyProgress() {
+  const wrap = document.getElementById('myProgress');
+  if (!state.myPlayer) return;
+  wrap.style.display = 'block';
+  const pos = state.myPlayer.position;
+  document.getElementById('myPosLabel').textContent = `${pos}/52`;
+  document.getElementById('myProgFill').style.width = `${(pos/52)*100}%`;
+}
+
+// ============================================================
+// GAME FLOW
+// ============================================================
+async function startGame() {
+  const firstPlayer = state.players.filter(p=>p.is_active)[0];
+  await sb.from('game_sessions').update({
+    status: 'playing',
+    current_player_id: firstPlayer.id
+  }).eq('id', state.session.id);
+  await sb.from('game_events').insert({
+    session_id: state.session.id,
+    event_type: 'turn_change',
+    event_data: { player_id: firstPlayer.id, player_name: firstPlayer.name }
+  });
+  addLog(`Partie démarrée ! Tour de <span>${firstPlayer.name}</span>`);
+}
+
+async function rollDice() {
+  if (state.waitingForAnswer) return;
+  const btn = document.getElementById('rollBtn');
+  btn.disabled = true;
+  state.waitingForAnswer = true;
+
+  // Animate dice
+  const dicEl = document.getElementById('dice-display');
+  dicEl.classList.add('rolling');
+  let count = 0;
+  const interval = setInterval(() => {
+    dicEl.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+    count++;
+    if (count >= 10) {
+      clearInterval(interval);
+      dicEl.classList.remove('rolling');
+      finalizeDice();
+    }
+  }, 60);
+}
+
+async function finalizeDice() {
+  const val = Math.floor(Math.random() * 6) + 1;
+  state.currentDice = val;
+  document.getElementById('dice-display').textContent = DICE_FACES[val - 1];
+
+  await sb.from('game_events').insert({
+    session_id: state.session.id,
+    player_id: state.myPlayer.id,
+    event_type: 'dice_roll',
+    event_data: { value: val }
+  });
+  addLog(`<span>${state.myPlayer.name}</span> lance le dé : ${val}`);
+
+  // Pick question
+  showQuestion(val);
+}
+
+function showQuestion(diceVal) {
+  const pool = LUDO_QUESTIONS;
+  const myPos = state.myPlayer.position;
+  let level = 'easy';
+  if (myPos >= 40) level = 'hard';
+  else if (myPos >= 20) level = 'medium';
+
+  const levelPool = pool.filter(q => q.level === level);
+  const allPool = levelPool.length > 0 ? levelPool : pool;
+  const q = allPool[Math.floor(Math.random() * allPool.length)];
+
+  const overlay = document.getElementById('questionOverlay');
+  const lvlEl = document.getElementById('qLevel');
+  lvlEl.textContent = level === 'easy' ? 'FACILE' : level === 'medium' ? 'MOYEN' : 'DIFFICILE';
+  lvlEl.className = `q-level ${level}`;
+  document.getElementById('qDiceInfo').textContent = `Dé : ${diceVal} — Bonne réponse → +${diceVal} cases | Fausse → -${diceVal} cases`;
+  document.getElementById('qText').textContent = q.question;
+
+  const opts = document.getElementById('qOptions');
+  opts.innerHTML = q.options.map((o, i) =>
+    `<button class="q-option" onclick="answerQuestion(${i}, ${q.answer}, ${diceVal})">${o}</button>`
+  ).join('');
+
+  document.getElementById('qResult').className = 'q-result';
+  document.getElementById('qResult').style.display = 'none';
+  overlay.classList.add('show');
+}
+
+async function answerQuestion(chosen, correct, diceVal) {
+  const opts = document.querySelectorAll('.q-option');
+  opts.forEach(o => o.disabled = true);
+
+  const isRight = chosen === correct;
+  opts[correct].classList.add('correct');
+  if (!isRight) opts[chosen].classList.add('wrong');
+
+  const result = document.getElementById('qResult');
+  result.className = `q-result show ${isRight ? 'good' : 'bad'}`;
+  result.style.display = 'block';
+  result.textContent = isRight
+    ? `✅ Bonne réponse ! Vous avancez de ${diceVal} cases.`
+    : `❌ Mauvaise réponse. Vous reculez de ${diceVal} cases.`;
+
+  const delta = isRight ? diceVal : -diceVal;
+  const newPos = Math.max(0, Math.min(52, state.myPlayer.position + delta));
+
+  await sb.from('game_events').insert({
+    session_id: state.session.id,
+    player_id: state.myPlayer.id,
+    event_type: 'answer',
+    event_data: { correct: isRight, dice: diceVal, delta, newPos }
+  });
+
+  setTimeout(async () => {
+    document.getElementById('questionOverlay').classList.remove('show');
+    await sb.from('players').update({ position: newPos }).eq('id', state.myPlayer.id);
+    state.myPlayer.position = newPos;
+    addLog(`<span>${state.myPlayer.name}</span> ${isRight ? 'avance' : 'recule'} → case ${newPos}`);
+
+    if (newPos >= 52) {
+      await endGame(state.myPlayer);
+      return;
+    }
+    await nextTurn();
+    state.waitingForAnswer = false;
+    await loadGameState();
+  }, 2000);
+}
+
+async function nextTurn() {
+  const active = state.players.filter(p => p.is_active);
+  const currIdx = active.findIndex(p => p.id === state.session.current_player_id);
+  const nextPlayer = active[(currIdx + 1) % active.length];
+  await sb.from('game_sessions').update({ current_player_id: nextPlayer.id }).eq('id', state.session.id);
+  await sb.from('game_events').insert({
+    session_id: state.session.id,
+    event_type: 'turn_change',
+    event_data: { player_id: nextPlayer.id, player_name: nextPlayer.name }
+  });
+}
+
+async function endGame(winner) {
+  await sb.from('game_sessions').update({ status: 'finished', game_data: { winner: winner.name } }).eq('id', state.session.id);
+  await sb.from('game_events').insert({
+    session_id: state.session.id,
+    event_type: 'game_over',
+    event_data: { winner: winner.name }
+  });
+  showWinner(winner.name);
+}
+
+function showWinner(name) {
+  document.getElementById('winnerName').textContent = name;
+  document.getElementById('gameOverOverlay').classList.add('show');
+}
+
+async function resetGame() {
+  await sb.from('game_sessions').update({ status: 'finished' }).eq('id', state.session.id);
+  await sb.from('players').update({ is_active: false }).eq('session_id', state.session.id);
+  state.session = null; state.players = []; state.myPlayer = null;
+  document.getElementById('gameOverOverlay').classList.remove('show');
+  document.getElementById('joinOverlay').classList.add('show');
+  localStorage.removeItem(`ludo_player_${TABLE_ID}`);
+  localStorage.removeItem(`ludo_name_${TABLE_ID}`);
+}
+
+async function leaveGame() {
+  if (state.myPlayer) {
+    await sb.from('players').update({ is_active: false }).eq('id', state.myPlayer.id);
+  }
+  window.location.href = 'index.html';
+}
+
+// ============================================================
+// REALTIME
+// ============================================================
+function subscribeRealtime() {
+  sb.channel(`ludo-${TABLE_ID}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${state.session.id}` }, async payload => {
+      state.session = payload.new;
+      if (payload.new.status === 'finished' && payload.new.game_data?.winner) {
+        showWinner(payload.new.game_data.winner);
+      }
+      renderAll();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `session_id=eq.${state.session.id}` }, async () => {
+      await loadGameState();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_events', filter: `session_id=eq.${state.session.id}` }, payload => {
+      const ev = payload.new;
+      if (ev.event_type === 'dice_roll' && ev.player_id !== state.myPlayer?.id) {
+        const p = state.players.find(x => x.id === ev.player_id);
+        if (p) addLog(`<span>${p.name}</span> lance le dé : ${ev.event_data.value}`);
+      }
+      if (ev.event_type === 'turn_change') {
+        const p = state.players.find(x => x.id === ev.event_data.player_id);
+        if (p && p.id !== state.myPlayer?.id) addLog(`Tour de <span>${p.name}</span>`);
+      }
+    })
+    .subscribe();
+}
+
+function addLog(msg) {
+  const area = document.getElementById('logArea');
+  const div = document.createElement('div');
+  div.className = 'log-item';
+  div.innerHTML = msg;
+  area.prepend(div);
+  if (area.children.length > 20) area.removeChild(area.lastChild);
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+buildBoard();
+
+// Auto-rejoin if localStorage has saved player
+(async () => {
+  const savedId = localStorage.getItem(`ludo_player_${TABLE_ID}`);
+  const savedName = localStorage.getItem(`ludo_name_${TABLE_ID}`);
+  if (savedId && savedName) {
+    document.getElementById('nameInput').value = savedName;
+  }
+})();
+</script>
+</body>
+</html>
