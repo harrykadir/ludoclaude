@@ -424,8 +424,12 @@ function renderScoreboard() {
 function updateRoundDisplay() {
   const round = state.session?.current_round || 0;
   document.getElementById('roundNum').textContent = round;
-  document.getElementById('roundBadge').textContent = `Round ${round} / 10`;
-  document.getElementById('progFill').style.width = `${(round/10)*100}%`;
+  const totalRounds = 20;
+  const gd = state.session?.game_data || {};
+  const qIdx = (gd.question_order || [])[round - 1];
+  const levelName = qIdx !== undefined ? (TOKEN_ROULETTE_QUESTIONS[qIdx]?.levelName || '') : '';
+  document.getElementById('roundBadge').textContent = `Round ${round} / ${totalRounds}${levelName ? ' · ' + levelName : ''}`;
+  document.getElementById('progFill').style.width = `${(round/totalRounds)*100}%`;
 }
 
 function renderCurrentQuestion() {
@@ -436,8 +440,10 @@ function renderCurrentQuestion() {
     return;
   }
   const idx = sess.current_question_index;
-  if (idx >= TOKEN_ROULETTE_QUESTIONS.length) return;
-  const q = TOKEN_ROULETTE_QUESTIONS[idx];
+  const gd = sess.game_data || {};
+  const qIdx = (gd.question_order || [])[idx] ?? idx;
+  if (qIdx >= TOKEN_ROULETTE_QUESTIONS.length) return;
+  const q = TOKEN_ROULETTE_QUESTIONS[qIdx];
   document.getElementById('questionText').textContent = `"${q.text}"`;
 }
 
@@ -491,20 +497,41 @@ function updateStatusBar() {
     const submittedCount = active.filter(p => roundEsts[p.id] !== undefined).length;
     const hasSubmitted = !!roundEsts[state.myPlayer?.id];
     bar.textContent = hasSubmitted
-      ? `✅ Estimation soumise — ${submittedCount}/${active.length} joueurs — Round ${sess.current_round}/10`
-      : `🎯 Estimez le nombre de tokens — Round ${sess.current_round}/10`;
+      ? `✅ Estimation soumise — ${submittedCount}/${active.length} joueurs — Round ${sess.current_round}/20`
+      : `🎯 Estimez le nombre de tokens — Round ${sess.current_round}/20`;
   }
 }
 
 // ============================================================
 // GAME FLOW
 // ============================================================
+function buildQuestionOrder() {
+  // Select 2 random questions per level (10 levels × 2 = 20 rounds)
+  const byLevel = {};
+  TOKEN_ROULETTE_QUESTIONS.forEach((q, i) => {
+    if (!byLevel[q.level]) byLevel[q.level] = [];
+    byLevel[q.level].push(i);
+  });
+  const order = [];
+  for (const level of Object.keys(byLevel).map(Number).sort((a,b)=>a-b)) {
+    const pool = [...byLevel[level]];
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    order.push(pool[0]);
+    if (pool.length > 1) order.push(pool[1]);
+  }
+  return order;
+}
+
 async function startGame() {
   const active = state.players.filter(p=>p.is_active);
+  const question_order = buildQuestionOrder();
   await sb.from('game_sessions').update({
     status: 'playing', current_round: 1, current_question_index: 0,
     current_player_id: active[0].id,
-    game_data: { estimates: {}, round_estimates: {} }
+    game_data: { estimates: {}, round_estimates: {}, question_order }
   }).eq('id', state.session.id);
 }
 
@@ -562,7 +589,8 @@ async function maybeReveal() {
 
 async function hostApplyScores(gd) {
   const sess = state.session;
-  const q = TOKEN_ROULETTE_QUESTIONS[sess.current_question_index];
+  const gd_qo = gd.question_order || [];
+  const q = TOKEN_ROULETTE_QUESTIONS[gd_qo[sess.current_question_index] ?? sess.current_question_index];
   const correct = q.tokens;
   const ests = gd.round_estimates || {};
   for (const p of state.players.filter(p=>p.is_active)) {
@@ -599,7 +627,8 @@ function renderTokenBreakdown(q, correct) {
 
 function showRevealOverlay(gd) {
   const sess = state.session;
-  const q = TOKEN_ROULETTE_QUESTIONS[sess.current_question_index];
+  const gd_qo = gd.question_order || [];
+  const q = TOKEN_ROULETTE_QUESTIONS[gd_qo[sess.current_question_index] ?? sess.current_question_index];
   const correct = q.tokens;
   const ests = gd.round_estimates || {};
   const scored = state.players.filter(p=>p.is_active).map(p => {
@@ -637,7 +666,7 @@ async function nextRound() {
   _advancingRound = fromRound;
   const nextR = fromRound + 1;
 
-  if (nextR > 10 || sess.current_question_index + 1 >= TOKEN_ROULETTE_QUESTIONS.length) {
+  if (nextR > 20 || sess.current_question_index + 1 >= 20) {
     await finishGame();
     return;
   }
