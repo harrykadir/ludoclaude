@@ -1020,20 +1020,23 @@ function ludoSeenKey(){return `ludo_seen_${state.session?.id||TABLE_ID}`;}
 function ludoGetSeen(){try{return JSON.parse(localStorage.getItem(ludoSeenKey()))||[];}catch(e){return [];}}
 function ludoAddSeen(qtext){const s=ludoGetSeen();if(!s.includes(qtext)){s.push(qtext);localStorage.setItem(ludoSeenKey(),JSON.stringify(s));}}
 let _currentQ=null;
+let _lastQuestionText=null; // guard: never repeat immediately after a wrong answer
 function showQuestion(dice,move){
-  const lvl=move.to>=54?'hard':move.to>=27?'medium':'easy';
-  let pool=LUDO_QUESTIONS.filter(q=>q.level===lvl);
-  // Exclude questions this player already answered correctly; if all seen, allow repeats
+  // All 150 questions in the pool — difficulty is random, not position-based
+  let pool=[...LUDO_QUESTIONS];
+  // Exclude questions already answered correctly by this player
   const seen=ludoGetSeen();
   const unseen=pool.filter(q=>!seen.includes(q.question));
   if(unseen.length) pool=unseen;
+  // Exclude the last question to avoid immediate repeat after a wrong answer
+  const noRepeat=pool.filter(q=>q.question!==_lastQuestionText);
+  if(noRepeat.length) pool=noRepeat;
   const q=pool[Math.floor(Math.random()*pool.length)];
   _currentQ=q;
+  // Hide the level badge (difficulty is now random)
   const lEl=document.getElementById('qLevel');
-  lEl.textContent=lvl==='easy'?'FACILE':lvl==='medium'?'MOYEN':'DIFFICILE';
-  lEl.className=`q-level ${lvl}`;
-  const mvDesc=move.from===-1?'Sortir de la maison':move.to>=59?'ARRIVÉE':move.to>=54?`Couloir ${move.to-53}/5`:`Avancer à rel.${move.to}`;
-  document.getElementById('qCtx').textContent=`Dé: ${dice} — ${mvDesc}`;
+  lEl.style.display='none';
+  document.getElementById('qCtx').textContent=`Dé : ${dice}`;
   document.getElementById('qText').textContent=q.question;
   document.getElementById('qOptions').innerHTML=q.options.map((o,i)=>`<button class="q-option" onclick="answerQ(${i},${q.answer})">${o}</button>`).join('');
   document.getElementById('qResult').className='q-result';
@@ -1052,6 +1055,8 @@ async function answerQ(chosen,correct){
   res.className=`q-result show ${ok?'good':'bad'}`;
   res.style.display='block';
   const gd=state.session.game_data;
+  // Track last question to prevent immediate repeat after wrong answer
+  if(_currentQ) _lastQuestionText=_currentQ.question;
   if(ok){
     if(_currentQ) ludoAddSeen(_currentQ.question);
     res.textContent='✅ Bonne réponse ! Le pion avance.';
