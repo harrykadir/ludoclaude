@@ -439,6 +439,7 @@ function isMyTurn() {
 function touchAction() { _lastAction = Date.now(); hideAfkWarning(); }
 
 function startHeartbeat() {
+  _lastAction = Date.now(); // reset idle timer when player actually joins
   stopHeartbeat();
   heartbeatInterval = setInterval(async()=>{
     if (state.myPlayer) await sb.from('players').update({last_seen:new Date().toISOString()}).eq('id',state.myPlayer.id);
