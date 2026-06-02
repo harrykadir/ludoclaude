@@ -321,16 +321,16 @@
       <span class="tag">150 questions</span>
     </div>
   </div>
-  <a href="token-roulette.html" class="game-card" style="--accent: linear-gradient(135deg,#f093fb,#f5576c)">
+  <div class="game-card" style="--accent: linear-gradient(135deg,#f093fb,#f5576c)" onclick="openTRLobby()">
     <span class="card-icon">🎰</span>
     <div class="card-title">Token Roulette</div>
-    <p class="card-desc">Estimez le nombre de tokens d'un texte. Plus vous êtes proche, plus vous marquez de points. 10 rounds de défi.</p>
+    <p class="card-desc">Estimez le nombre de tokens d'un texte. Plus vous êtes proche, plus vous marquez de points. 20 rounds · 10 tables.</p>
     <div class="card-tags">
       <span class="tag">6 joueurs</span>
-      <span class="tag">10 rounds</span>
+      <span class="tag">20 rounds</span>
       <span class="tag">Estimation</span>
     </div>
-  </a>
+  </div>
   <a href="misconceptions.html" class="game-card" style="--accent: linear-gradient(135deg,#4facfe,#00f2fe)">
     <span class="card-icon">🕵️</span>
     <div class="card-title">3 Mensonges 1 Vérité</div>
@@ -345,6 +345,21 @@
 
 <div class="footer">
   LudoClaude · Session Live Claude · Temps réel via Supabase
+</div>
+
+<!-- ── Token Roulette Lobby overlay ── -->
+<div class="overlay" id="trLobbyOverlay" onclick="trOverlayClick(event)">
+  <div class="lobby-modal">
+    <div class="lobby-header">
+      <div class="lobby-title">🎰 Choisir une table</div>
+      <button class="lobby-close" onclick="closeTRLobby()">✕</button>
+    </div>
+    <p class="lobby-subtitle">Rejoignez une table avec de la place disponible. La table se lance quand le créateur démarre la partie.</p>
+    <div class="tables-list" id="trTablesList">
+      <div class="lobby-loading">Chargement des tables…</div>
+    </div>
+    <div class="lobby-refresh" id="trLobbyRefreshInfo"></div>
+  </div>
 </div>
 
 <!-- ── Ludo Lobby overlay ── -->
@@ -463,6 +478,90 @@ function renderLobby(results) {
 function joinTable(n) {
   closeLobby();
   location.href = `ludo-table-${n}.html?join=1`;
+}
+
+// ── Token Roulette Lobby ──
+let _trLobbyInterval = null;
+
+function openTRLobby() {
+  document.getElementById('trLobbyOverlay').classList.add('show');
+  loadTRLobby();
+  _trLobbyInterval = setInterval(loadTRLobby, 8000);
+}
+
+function closeTRLobby() {
+  document.getElementById('trLobbyOverlay').classList.remove('show');
+  clearInterval(_trLobbyInterval);
+  _trLobbyInterval = null;
+}
+
+function trOverlayClick(e) {
+  if (e.target === document.getElementById('trLobbyOverlay')) closeTRLobby();
+}
+
+async function loadTRLobby() {
+  const STALE_MS_TR = 45000;
+  const thr = new Date(Date.now() - STALE_MS_TR).toISOString();
+
+  const { data: sessions } = await sb
+    .from('game_sessions')
+    .select('id, table_id')
+    .eq('game_type', 'token_roulette')
+    .neq('status', 'finished')
+    .order('created_at', { ascending: false });
+
+  const results = await Promise.all(
+    Array.from({ length: 10 }, (_, i) => i + 1).map(async n => {
+      const tid = `token-roulette-${n}`;
+      const sess = sessions?.find(s => s.table_id === tid);
+      let count = 0;
+      if (sess) {
+        const { count: c } = await sb
+          .from('players')
+          .select('*', { count: 'exact', head: true })
+          .eq('session_id', sess.id)
+          .eq('is_active', true)
+          .gte('last_seen', thr);
+        count = c || 0;
+      }
+      return { n, count, full: count >= 6 };
+    })
+  );
+
+  renderTRLobby(results);
+}
+
+function renderTRLobby(results) {
+  const list = document.getElementById('trTablesList');
+  const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  list.innerHTML = results.map(r => {
+    const dotColor = r.full ? '#e74c3c' : r.count === 0 ? '#2ecc71' : r.count < 4 ? '#f1c40f' : '#e67e22';
+    const label = r.full ? 'Table complète' : r.count === 0 ? 'En attente de joueurs' : `${r.count} joueur${r.count > 1 ? 's' : ''} en attente`;
+    const pips = Array.from({ length: 6 }, (_, i) =>
+      `<div class="pip${i < r.count ? ' filled' : ''}" style="${i < r.count ? 'background:#f093fb;border-color:#f5576c;box-shadow:0 0 6px rgba(240,147,251,0.6)' : ''}"></div>`
+    ).join('');
+    const btnDisabled = r.full ? 'disabled' : '';
+    return `
+      <div class="table-row${r.full ? ' full' : ''}">
+        <div class="table-info">
+          <div class="table-num" style="background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent">${r.n}</div>
+          <div>
+            <div class="table-name">Table ${r.n}</div>
+            <div class="table-count"><span class="dot-live" style="background:${dotColor}"></span>${label}</div>
+            <div class="pips">${pips}</div>
+          </div>
+        </div>
+        <button class="btn-join" style="background:linear-gradient(135deg,#f093fb,#f5576c)" onclick="joinTRTable(${r.n})" ${btnDisabled}>${r.full ? 'Complet' : 'Rejoindre'}</button>
+      </div>`;
+  }).join('');
+
+  document.getElementById('trLobbyRefreshInfo').textContent = `Mis à jour à ${now} · Actualisation automatique toutes les 8s`;
+}
+
+function joinTRTable(n) {
+  closeTRLobby();
+  location.href = `token-roulette.html?table=${n}`;
 }
 </script>
 </body>

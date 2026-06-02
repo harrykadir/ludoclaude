@@ -117,6 +117,7 @@ header {
   <div style="display:flex;align-items:center;gap:12px">
     <a href="index.html" style="color:rgba(255,255,255,0.6);text-decoration:none;font-size:1.5rem">←</a>
     <div class="logo">🎰 Token Roulette</div>
+    <div id="trTableLabel" style="font-size:0.88rem;color:rgba(255,255,255,0.45);font-weight:500"></div>
   </div>
   <div style="font-size:0.9rem;color:rgba(255,255,255,0.5)">Round <span id="roundNum">0</span>/10</div>
   <button class="btn btn-secondary" onclick="leaveGame()">Quitter</button>
@@ -125,6 +126,7 @@ header {
 <!-- Join -->
 <div class="overlay show" id="joinOverlay">
   <div class="modal">
+    <button onclick="location.href='index.html'" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.85rem;margin-bottom:14px;padding:0;text-align:left">← Retour</button>
     <h2>🎰 Token Roulette</h2>
     <p>Estimez le nombre de tokens dans des phrases. Plus vous êtes précis, plus vous scorez !</p>
     <div class="input-group">
@@ -220,7 +222,13 @@ header {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
-const TABLE_ID = 'token-roulette';
+const _trTableNum = new URLSearchParams(location.search).get('table') || '1';
+const TABLE_ID = 'token-roulette-' + _trTableNum;
+// Show table number in header
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('trTableLabel');
+  if (el) el.textContent = 'Table ' + _trTableNum;
+});
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let state = { session: null, players: [], myPlayer: null, submitted: false };
 
