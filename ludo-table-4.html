@@ -105,6 +105,14 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
   </div>
 </div>
 
+<!-- INIT REVEAL -->
+<div class="overlay" id="initRevealOverlay">
+  <div class="modal" style="text-align:center">
+    <div id="initRevealContent"></div>
+    <div style="margin-top:16px;color:rgba(255,255,255,0.35);font-size:0.82rem">La partie commence dans <span id="initRevealCountdown">5</span>s…</div>
+  </div>
+</div>
+
 <!-- TOKEN SELECT -->
 <div class="overlay" id="tokenOverlay">
   <div class="modal">
@@ -729,6 +737,7 @@ function renderAll() {
   updateStatus();
   updateRollBtn();
   updateInitRollUI();
+  maybeShowInitReveal();
 }
 
 function renderPlayers() {
@@ -792,13 +801,14 @@ async function startInitRoll() {
 }
 
 function isInitRolling() {
-  return state.session?.status==='playing' && state.session?.game_data?.phase==='init_rolling';
+  return state.session?.status==='playing' && ['init_rolling','init_reveal'].includes(state.session?.game_data?.phase);
 }
 
 function updateInitRollUI() {
   const sess=state.session;
   const overlay=document.getElementById('initRollOverlay');
-  if(!isInitRolling()){overlay.classList.remove('show');return;}
+  const phase=state.session?.game_data?.phase;
+  if(!['init_rolling'].includes(phase)){overlay.classList.remove('show');return;}
   overlay.classList.add('show');
   const rolls=sess.game_data?.init_rolls||{};
   const myRoll=rolls[state.myPlayer?.id];
@@ -817,6 +827,78 @@ function updateInitRollUI() {
   }).join('');
 }
 
+let _initRevealTimer = null;
+
+function maybeShowInitReveal() {
+  const gd=state.session?.game_data;
+  if(gd?.phase!=='init_reveal'){
+    // hide overlay if phase changed away
+    const ov=document.getElementById('initRevealOverlay');
+    if(ov) ov.classList.remove('show');
+    if(_initRevealTimer!==null){clearInterval(_initRevealTimer);_initRevealTimer=null;}
+    return;
+  }
+  if(_initRevealTimer!==null) return; // already counting
+  showInitRevealOverlay(gd);
+  let secs=5;
+  _initRevealTimer=setInterval(async()=>{
+    secs--;
+    const el=document.getElementById('initRevealCountdown');
+    if(el) el.textContent=secs;
+    if(secs<=0){
+      clearInterval(_initRevealTimer); _initRevealTimer=null;
+      if(isHost()){
+        const gd2=state.session?.game_data;
+        if(gd2?.phase==='init_reveal'){
+          const active=state.players.filter(p=>p.is_active);
+          const sorted=[...active].sort((a,b)=>{
+            const po=gd2.play_order||[];
+            return po.indexOf(a.id)-po.indexOf(b.id);
+          });
+          addLog(`Ordre: ${sorted.map(p=>`<span>${p.name}</span>(${gd2.init_rolls[p.id]})`).join(' → ')}`);
+          await sb.from('game_sessions').update({
+            game_data:{...gd2,phase:'rolling',dice:null}
+          }).eq('id',state.session.id);
+        }
+      }
+    }
+  },1000);
+}
+
+function showInitRevealOverlay(gd) {
+  const ov=document.getElementById('initRevealOverlay');
+  if(!ov) return;
+  ov.classList.add('show');
+  const active=state.players.filter(p=>p.is_active);
+  const rolls=gd.init_rolls||{};
+  const playOrder=gd.play_order||[];
+  const sorted=[...active].sort((a,b)=>playOrder.indexOf(a.id)-playOrder.indexOf(b.id));
+  const winner=sorted[0];
+  const winnerPi=boardIndex(winner?.id);
+  const winnerColor=winnerPi>=0?SETUPS[winnerPi].hex:'#fff';
+  const content=document.getElementById('initRevealContent');
+  if(!content) return;
+  content.innerHTML=`
+    <div style="font-size:2.5rem;margin-bottom:8px">🎉</div>
+    <div style="font-size:1.3rem;font-weight:800;color:${winnerColor};margin-bottom:4px">${winner?.name} commence !</div>
+    <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:18px">Le plus grand résultat au dé</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${sorted.map((p,i)=>{
+        const pi=boardIndex(p.id);
+        const s=pi>=0?SETUPS[pi]:null;
+        const val=rolls[p.id]||'?';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-radius:10px;background:${i===0?'rgba(102,126,234,0.2)':'rgba(255,255,255,0.05)'};border:1px solid ${i===0?'rgba(102,126,234,0.4)':'rgba(255,255,255,0.08)'}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:0.75rem;color:rgba(255,255,255,0.35);font-weight:700;min-width:16px">${i+1}.</span>
+            <span style="font-weight:700;color:${s?.hex||'#fff'}">${p.name}</span>
+            ${i===0?'<span style="font-size:0.7rem;background:linear-gradient(135deg,#667eea,#764ba2);padding:2px 7px;border-radius:10px;font-weight:700">PREMIER</span>':''}
+          </div>
+          <span style="font-size:1.3rem">${DICE_FACES[val-1]||val}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
 async function doInitRoll() {
   const val=Math.floor(Math.random()*6)+1;
   const gd={...state.session.game_data};
@@ -824,13 +906,15 @@ async function doInitRoll() {
   const active=state.players.filter(p=>p.is_active);
   const allRolled=active.every(p=>rolls[p.id]!==undefined);
   if(allRolled){
-    const sorted=[...active].sort((a,b)=>(rolls[b.id]-rolls[a.id])||a.turn_order-b.turn_order);
+    // Random tiebreaks stored in DB so all clients see same order
+    const tiebreaks={};
+    active.forEach(p=>{tiebreaks[p.id]=Math.random();});
+    const sorted=[...active].sort((a,b)=>(rolls[b.id]-rolls[a.id])||(tiebreaks[a.id]-tiebreaks[b.id]));
     const playOrder=sorted.map(p=>p.id);
     await sb.from('game_sessions').update({
       current_player_id:playOrder[0],
-      game_data:{...gd,init_rolls:rolls,play_order:playOrder,phase:'rolling',dice:null}
+      game_data:{...gd,init_rolls:rolls,play_order:playOrder,tiebreaks,phase:'init_reveal',dice:null}
     }).eq('id',state.session.id);
-    addLog(`Ordre: ${sorted.map(p=>`<span>${p.name}</span>(${rolls[p.id]})`).join(' → ')}`);
   } else {
     await sb.from('game_sessions').update({game_data:{...gd,init_rolls:rolls}}).eq('id',state.session.id);
   }
