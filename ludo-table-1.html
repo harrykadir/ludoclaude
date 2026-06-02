@@ -921,10 +921,19 @@ async function selectTokenOnBoard(ti,move){
   showQuestion(gd.dice,move);
 }
 
+function ludoSeenKey(){return `ludo_seen_${state.session?.id||TABLE_ID}`;}
+function ludoGetSeen(){try{return JSON.parse(localStorage.getItem(ludoSeenKey()))||[];}catch(e){return [];}}
+function ludoAddSeen(qtext){const s=ludoGetSeen();if(!s.includes(qtext)){s.push(qtext);localStorage.setItem(ludoSeenKey(),JSON.stringify(s));}}
+let _currentQ=null;
 function showQuestion(dice,move){
   const lvl=move.to>=54?'hard':move.to>=27?'medium':'easy';
-  const pool=LUDO_QUESTIONS.filter(q=>q.level===lvl);
+  let pool=LUDO_QUESTIONS.filter(q=>q.level===lvl);
+  // Exclude questions this player already answered correctly; if all seen, allow repeats
+  const seen=ludoGetSeen();
+  const unseen=pool.filter(q=>!seen.includes(q.question));
+  if(unseen.length) pool=unseen;
   const q=pool[Math.floor(Math.random()*pool.length)];
+  _currentQ=q;
   const lEl=document.getElementById('qLevel');
   lEl.textContent=lvl==='easy'?'FACILE':lvl==='medium'?'MOYEN':'DIFFICILE';
   lEl.className=`q-level ${lvl}`;
@@ -949,6 +958,7 @@ async function answerQ(chosen,correct){
   res.style.display='block';
   const gd=state.session.game_data;
   if(ok){
+    if(_currentQ) ludoAddSeen(_currentQ.question);
     res.textContent='✅ Bonne réponse ! Le pion avance.';
     setTimeout(async()=>{document.getElementById('questionOverlay').classList.remove('show');await executeMove(gd.pending_move,gd.dice);},1800);
   } else {

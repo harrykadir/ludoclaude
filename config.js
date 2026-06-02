@@ -269,3 +269,121 @@ const LUDO_QUESTIONS = [
   {level:'hard',question:"Quelle est la meilleure analogie pour expliquer ce qu'est un LLM à quelqu'un sans background technique ?",options:["C'est comme Google, mais qui répond avec des phrases complètes au lieu de liens","C'est une intelligence artificielle qui pense et comprend comme un être humain","C'est un système qui, à partir de l'immense quantité de texte sur lequel il a été entraîné, prédit le texte le plus probable et utile en réponse à ce qu'on lui écrit","C'est une base de données de millions de réponses organisées par sujet et par contexte"],answer:2},
   {level:'hard',question:"Quelle est LA compétence la plus impactante pour tirer parti d'un LLM au quotidien ?",options:["Connaître précisément les différences techniques entre tous les modèles disponibles","Savoir construire et itérer sur des prompts précis — avec le bon contexte, la bonne tâche, le bon format et des exemples concrets","Maîtriser l'API (interface de programmation) pour automatiser tous les workflows manuels","Créer des Skills réutilisables pour chaque tâche récurrente sans exception"],answer:1},
 ];
+
+const TOKEN_ROULETTE_QUESTIONS = [
+  { text: "Bonjour !", tokens: 3 },
+  { text: "Qu'est-ce que Claude Code ?", tokens: 8 },
+  { text: "Explique-moi le concept de context window en 3 phrases.", tokens: 14 },
+  { text: "Tu es un assistant IA utile, inoffensif et honnête.", tokens: 13 },
+  { text: "Write a Python function to reverse a string.", tokens: 11 },
+  { text: "Anthropic a fondé Claude pour créer une IA bénéfique et sûre pour l'humanité.", tokens: 20 },
+  { text: "The quick brown fox jumps over the lazy dog.", tokens: 10 },
+  { text: "Quelle est la différence entre Opus, Sonnet et Haiku ?", tokens: 14 },
+  { text: "def fibonacci(n): return n if n <= 1 else fibonacci(n-1) + fibonacci(n-2)", tokens: 22 },
+  { text: "Claude peut analyser des images, des PDFs, traiter du code et répondre en plusieurs langues.", tokens: 22 },
+  { text: "I", tokens: 1 },
+  { text: "Summarize this document in bullet points.", tokens: 8 }
+];
+
+const MISCONCEPTIONS_QUESTIONS = [
+  {
+    statements: [
+      "Claude a une mémoire persistante entre toutes les conversations par défaut",
+      "Claude peut refuser des demandes qu'il juge non éthiques",
+      "Claude est capable de lire et analyser des images",
+      "Claude Opus est plus puissant que Claude Haiku"
+    ],
+    truth: 1, // index 1 est vrai
+    explanation: "Par défaut, Claude n'a PAS de mémoire entre les sessions. Chaque conversation commence de zéro. Les autres affirmations sont vraies."
+  },
+  {
+    statements: [
+      "Le context window de Claude peut aller jusqu'à 200 000 tokens",
+      "Claude peut accéder à Internet en temps réel sans outils",
+      "Claude Code peut exécuter des commandes dans le terminal",
+      "Claude supporte le 'tool use' (function calling)"
+    ],
+    truth: 0,
+    explanation: "Claude ne peut PAS accéder à Internet nativement - il a besoin d'outils externes. Les autres sont vraies."
+  },
+  {
+    statements: [
+      "Anthropic a été fondée en 2021",
+      "Claude peut générer des images nativement",
+      "Claude 4 est la famille de modèles la plus récente",
+      "Constitutional AI est une technique développée par Anthropic"
+    ],
+    truth: 2,
+    explanation: "Claude ne génère PAS d'images nativement. Claude 4 est bien la famille la plus récente. Anthropic a été fondée en 2021 ✓. Constitutional AI ✓."
+  },
+  {
+    statements: [
+      "Le prompt caching réduit les coûts pour les longs contextes répétés",
+      "Claude Haiku est le modèle le plus intelligent de la gamme",
+      "Claude Code peut créer des subagents via le tool Agent",
+      "L'API Claude utilise un format REST/JSON"
+    ],
+    truth: 1,
+    explanation: "Haiku est le plus RAPIDE et économique, pas le plus intelligent. Opus est le plus puissant. Les autres sont vraies."
+  },
+  {
+    statements: [
+      "MCP signifie Model Context Protocol",
+      "Claude peut lire des fichiers PDF joints à la conversation",
+      "Le Batch API permet de traiter des requêtes à coût réduit",
+      "Claude Code ne fonctionne que sur macOS"
+    ],
+    truth: 3,
+    explanation: "Claude Code fonctionne sur macOS, Windows ET Linux (via WSL). Les 3 premières affirmations sont toutes vraies !"
+  },
+  {
+    statements: [
+      "Un token représente approximativement 4 caractères en anglais",
+      "Claude peut coder dans plus de 50 langages de programmation",
+      "Le system prompt est envoyé avant la conversation utilisateur",
+      "Claude Sonnet 4.6 a un context window de 50k tokens"
+    ],
+    truth: 3,
+    explanation: "Sonnet 4.6 a un context window de 200k tokens, pas 50k. Les 3 premières sont vraies."
+  },
+  {
+    statements: [
+      "Claude Code utilise des 'hooks' pour automatiser des actions",
+      "Les Skills dans Claude Code sont invocables par des slash-commands",
+      "Claude peut analyser et modifier du code dans plusieurs fichiers",
+      "Claude ne peut traiter qu'un fichier à la fois"
+    ],
+    truth: 3,
+    explanation: "Claude peut parfaitement traiter et modifier plusieurs fichiers simultanément. Les 3 premières sont vraies."
+  },
+  {
+    statements: [
+      "Anthropic utilise RLHF (Reinforcement Learning from Human Feedback)",
+      "Claude peut s'exprimer en français, espagnol, mandarin et d'autres langues",
+      "Constitutional AI implique que Claude s'auto-critique selon des principes",
+      "Claude Opus coûte moins cher que Haiku à l'utilisation"
+    ],
+    truth: 3,
+    explanation: "Opus est le modèle le plus cher, Haiku le moins cher. Les 3 premières sont vraies."
+  },
+  {
+    statements: [
+      "Le Workflow SDK de Claude Code supporte des boucles et conditions",
+      "pipeline() dans le SDK est plus rapide que parallel() pour du multi-stage",
+      "Les worktrees git permettent aux agents de travailler sans conflits",
+      "Claude peut créer et modifier des fichiers uniquement texte"
+    ],
+    truth: 3,
+    explanation: "Claude peut créer/modifier tout type de fichier (code, images base64, etc.). Les 3 premières sont vraies."
+  },
+  {
+    statements: [
+      "La commande /compact résume le contexte pour libérer la fenêtre",
+      "Claude Code s'intègre avec VS Code et JetBrains",
+      "Les modèles Claude 4 ont été publiés après ceux de la série Claude 3",
+      "Claude ne peut pas appeler d'APIs externes sans code"
+    ],
+    truth: 3,
+    explanation: "Avec tool use / MCP, Claude peut orchestrer des appels à des APIs externes. Les 3 premières sont vraies."
+  }
+];
