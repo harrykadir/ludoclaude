@@ -1099,7 +1099,7 @@ buildBoard();
 
   // Show join modal
   const autoJoin = new URLSearchParams(location.search).has('join');
-  if (autoJoin) { _joinMode = 'join'; renderJoinStep('list'); }
+  if (autoJoin) { _joinMode = 'join'; renderJoinStep('name'); }
   else renderJoinStep('choose');
   joinOverlayShow();
 })();
