@@ -448,19 +448,14 @@ function renderEstimates() {
   const activeIds = state.players.filter(p=>p.is_active).map(p=>p.id);
   const entries = Object.entries(roundEsts).filter(([id]) => activeIds.includes(id));
 
-  const isMyTurn = sess.current_player_id === state.myPlayer?.id;
   const hasSubmitted = !!roundEsts[state.myPlayer?.id];
 
   document.getElementById('estimateSection').style.display = (sess.status === 'playing') ? 'block' : 'none';
-  document.getElementById('submitEstBtn').disabled = !isMyTurn || hasSubmitted;
+  document.getElementById('submitEstBtn').disabled = hasSubmitted;
 
-  let statusText = '';
-  if (hasSubmitted) statusText = '✅ Estimation soumise !';
-  else if (isMyTurn) statusText = '🎯 C\'est votre tour d\'estimer !';
-  else {
-    const curr = state.players.find(p => p.id === sess.current_player_id);
-    statusText = `⏳ En attente de ${curr?.name || '...'} — ${entries.length}/${activeIds.length} estimations`;
-  }
+  const statusText = hasSubmitted
+    ? `✅ Estimation soumise ! (${entries.length}/${activeIds.length} joueurs)`
+    : `🎯 Estimez le nombre de tokens ! (${entries.length}/${activeIds.length} ont déjà estimé)`;
   document.getElementById('estimateStatus').textContent = statusText;
 
   // Anti-cheat: show ONLY who has already estimated (never the values) during the round
@@ -491,10 +486,13 @@ function updateStatusBar() {
       bar.innerHTML += ` <button class="btn btn-primary" style="margin-left:8px;padding:6px 14px;font-size:0.8rem" onclick="startGame()">▶ Démarrer</button>`;
     }
   } else if (sess.status === 'playing') {
-    const curr = state.players.find(p => p.id === sess.current_player_id);
-    bar.textContent = curr?.id === state.myPlayer?.id
-      ? `🎯 Votre tour — Round ${sess.current_round}/10`
-      : `⏳ Tour de ${curr?.name} — Round ${sess.current_round}/10`;
+    const roundEsts = sess.game_data?.round_estimates || {};
+    const active = state.players.filter(p=>p.is_active);
+    const submittedCount = active.filter(p => roundEsts[p.id] !== undefined).length;
+    const hasSubmitted = !!roundEsts[state.myPlayer?.id];
+    bar.textContent = hasSubmitted
+      ? `✅ Estimation soumise — ${submittedCount}/${active.length} joueurs — Round ${sess.current_round}/10`
+      : `🎯 Estimez le nombre de tokens — Round ${sess.current_round}/10`;
   }
 }
 
@@ -521,32 +519,9 @@ async function submitEstimate() {
   const gd = { ...(sess.game_data || {}), round_estimates: { ...(sess.game_data?.round_estimates || {}) } };
   gd.round_estimates[state.myPlayer.id] = val;
 
+  // All players estimate simultaneously — just persist my estimate.
+  // maybeReveal() on every client detects when everyone has submitted and triggers reveal.
   await sb.from('game_sessions').update({ game_data: gd }).eq('id', state.session.id);
-  await sb.from('game_events').insert({
-    session_id: state.session.id, player_id: state.myPlayer.id,
-    event_type: 'estimate', event_data: { value: val, round: sess.current_round }
-  });
-
-  // Check if all players have submitted → move to next player or reveal
-  const active = state.players.filter(p=>p.is_active);
-  const allSubmitted = active.every(p => gd.round_estimates[p.id] !== undefined);
-
-  if (!allSubmitted) {
-    // Move to next player
-    const currIdx = active.findIndex(p => p.id === sess.current_player_id);
-    const nextP = active[(currIdx + 1) % active.length];
-    // Skip players who already submitted
-    let nextIdx = (currIdx + 1) % active.length;
-    while (gd.round_estimates[active[nextIdx].id] !== undefined && nextIdx !== currIdx) {
-      nextIdx = (nextIdx + 1) % active.length;
-    }
-    await sb.from('game_sessions').update({ game_data: gd, current_player_id: active[nextIdx].id }).eq('id', state.session.id);
-  } else {
-    // All submitted — just persist. Reveal is state-driven via renderAll()/maybeReveal()
-    // on every client (scoring is applied once by the host).
-    await sb.from('game_sessions').update({ game_data: gd }).eq('id', state.session.id);
-    await loadGameState();
-  }
 }
 
 function trPoints(diff) {
@@ -561,7 +536,7 @@ function trPoints(diff) {
 // Called from renderAll() on every client. Display is state-driven; scoring is host-only & once per round.
 let _shownRevealRound = null;
 let _scoringRound = null;
-function maybeReveal() {
+async function maybeReveal() {
   const sess = state.session;
   if (!sess || sess.status !== 'playing') return;
   const gd = sess.game_data || {};
@@ -575,9 +550,12 @@ function maybeReveal() {
     _scoringRound = sess.current_round;
     hostApplyScores(gd);
   }
-  // Every client shows the reveal overlay once per round
+  // Every client shows the reveal overlay once per round.
+  // Reload players first so scores/state are fresh (host may have just updated them).
   if (_shownRevealRound !== sess.current_round) {
     _shownRevealRound = sess.current_round;
+    const { data: freshPlayers } = await sb.from('players').select('*').eq('session_id', sess.id).order('turn_order');
+    if (freshPlayers) state.players = freshPlayers;
     showRevealOverlay(gd);
   }
 }
