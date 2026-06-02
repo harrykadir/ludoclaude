@@ -629,13 +629,23 @@ async function joinSubmit() {
       if ((count||0) >= MAX_PLAYERS) { if(errEl) errEl.textContent='Table complète.'; nameEl.disabled=false; return; }
       session = existing;
     } else {
-      // Create new session on this table — finish any stale waiting session first
-      const {data:stale} = await sb.from('game_sessions').select('id')
+      // Create new session — only close an existing waiting session if it has NO active recent players.
+      // If it has active players, redirect to join mode instead of evicting them.
+      const thr = new Date(Date.now()-STALE_MS).toISOString();
+      const {data:existing} = await sb.from('game_sessions').select('id')
         .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting')
         .order('created_at',{ascending:false}).limit(1).single();
-      if (stale) {
-        await sb.from('players').update({is_active:false}).eq('session_id',stale.id).eq('is_active',true);
-        await sb.from('game_sessions').update({status:'finished'}).eq('id',stale.id);
+      if (existing) {
+        const {count:activeCount} = await sb.from('players').select('*',{count:'exact',head:true})
+          .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',thr);
+        if ((activeCount||0) > 0) {
+          // Active players are already waiting — join them instead of evicting them
+          if(errEl) errEl.textContent = 'Une partie est déjà en attente sur cette table. Utilisez "Rejoindre une partie" pour y entrer.';
+          nameEl.disabled = false; return;
+        }
+        // No active recent players — safe to close the ghost session
+        await sb.from('players').update({is_active:false}).eq('session_id',existing.id).eq('is_active',true);
+        await sb.from('game_sessions').update({status:'finished'}).eq('id',existing.id);
       }
       const {data:ns,error:nsErr} = await sb.from('game_sessions').insert({
         game_type:'ludo',table_id:TABLE_ID,status:'waiting',
