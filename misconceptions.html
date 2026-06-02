@@ -283,7 +283,7 @@ function startRevealCountdown() {
   revealTimer = setInterval(() => {
     t--;
     document.getElementById('mcCountdown').textContent = t;
-    if (t <= 0) { clearRevealTimer(); if (isHost()) nextRound(); }
+    if (t <= 0) { clearRevealTimer(); nextRound(); }
   }, 1000);
 }
 function clearRevealTimer() { if (revealTimer) { clearInterval(revealTimer); revealTimer = null; } }
@@ -386,7 +386,7 @@ async function fixStaleSession() {
   }
 }
 
-function renderAll() {
+function renderAll() { maybeReveal();
   renderPlayers();
   renderScoreboard();
   updateStatusBar();
@@ -447,10 +447,13 @@ function updateStatusBar() {
       bar.innerHTML += ` <button class="btn btn-primary" style="margin-left:8px;padding:6px 14px;font-size:0.8rem;color:#001a3a" onclick="startGame()">▶ Démarrer</button>`;
     }
   } else if (sess.status === 'playing') {
-    const curr = state.players.find(p => p.id === sess.current_player_id);
-    bar.textContent = curr?.id === state.myPlayer?.id
-      ? `🎯 C'est votre tour de voter !`
-      : `⏳ Tour de ${curr?.name || '...'} — Round ${sess.current_round}/10`;
+    const votes = sess.game_data?.round_votes || {};
+    const active = state.players.filter(p=>p.is_active);
+    const voteCount = active.filter(p => votes[p.id] !== undefined).length;
+    const hasVoted = votes[state.myPlayer?.id] !== undefined;
+    bar.textContent = hasVoted
+      ? `✅ Vote enregistré — ${voteCount}/${active.length} joueurs — Round ${sess.current_round}/10`
+      : `🕵️ Trouvez la vérité parmi les mensonges — Round ${sess.current_round}/10`;
   }
 }
 
@@ -472,8 +475,8 @@ function renderQuestion() {
   const q = MISCONCEPTIONS_QUESTIONS[idx];
   const votes = sess.game_data?.round_votes || {};
   const myVote = votes[state.myPlayer?.id];
-  const isMyTurn = sess.current_player_id === state.myPlayer?.id;
-  const canVote = isMyTurn && myVote === undefined && sess.status === 'playing';
+  // All players vote simultaneously
+  const canVote = myVote === undefined && sess.status === 'playing';
 
   grid.innerHTML = q.statements.map((stmt, i) => {
     let cls = 'statement-card';
@@ -486,7 +489,7 @@ function renderQuestion() {
     </div>`;
   }).join('');
 
-  // Vote status
+  // Vote status — anti-cheat: count only, never show who voted what
   const active = state.players.filter(p=>p.is_active);
   const voteCount = Object.keys(votes).filter(id => active.find(p=>p.id===id)).length;
 
@@ -496,10 +499,10 @@ function renderQuestion() {
         ✅ Vote enregistré — ${voteCount}/${active.length} joueurs ont voté
         <span class="dots"></span>
       </div>`;
-    } else if (!isMyTurn) {
-      voteStatus.innerHTML = `<div class="waiting-votes">⏳ En attente du vote de ${state.players.find(p=>p.id===sess.current_player_id)?.name || '...'} <span class="dots"></span></div>`;
     } else {
-      voteStatus.innerHTML = `<div style="text-align:center;color:#4facfe;font-size:0.9rem;padding:10px;font-weight:600">👆 Cliquez sur l'affirmation que vous pensez être vraie</div>`;
+      voteStatus.innerHTML = `<div style="text-align:center;color:#4facfe;font-size:0.9rem;padding:10px;font-weight:600">
+        👆 Cliquez sur l'affirmation que vous pensez être vraie — ${voteCount}/${active.length} ont déjà voté
+      </div>`;
     }
   }
 }
@@ -520,52 +523,65 @@ async function castVote(choice) {
   const sess = state.session;
   const votes = { ...(sess.game_data?.round_votes || {}) };
   votes[state.myPlayer.id] = choice;
+  // All players vote simultaneously — just persist. maybeReveal() handles the rest.
+  await sb.from('game_sessions').update({
+    game_data: { ...sess.game_data, round_votes: votes }
+  }).eq('id', sess.id);
+}
 
-  await sb.from('game_events').insert({
-    session_id: sess.id, player_id: state.myPlayer.id,
-    event_type: 'vote', event_data: { choice, round: sess.current_round }
-  });
+// ── State-driven reveal (same pattern as Token Roulette) ─────────────────────
+let _shownRevealRound = null;
+let _scoringRound = null;
 
+async function maybeReveal() {
+  const sess = state.session;
+  if (!sess || sess.status !== 'playing') return;
+  const gd = sess.game_data || {};
   const active = state.players.filter(p=>p.is_active);
-  const allVoted = active.every(p => votes[p.id] !== undefined);
+  if (!active.length) return;
+  const allVoted = active.every(p => gd.round_votes?.[p.id] !== undefined);
+  if (!allVoted) return;
 
-  if (!allVoted) {
-    // Move to next non-voted player
-    const currIdx = active.findIndex(p => p.id === sess.current_player_id);
-    let nextIdx = (currIdx + 1) % active.length;
-    while (votes[active[nextIdx].id] !== undefined && nextIdx !== currIdx) {
-      nextIdx = (nextIdx + 1) % active.length;
-    }
-    await sb.from('game_sessions').update({
-      game_data: { ...sess.game_data, round_votes: votes },
-      current_player_id: active[nextIdx].id
-    }).eq('id', sess.id);
-  } else {
-    await sb.from('game_sessions').update({
-      game_data: { ...sess.game_data, round_votes: votes }
-    }).eq('id', sess.id);
-    setTimeout(() => revealAnswers(votes), 400);
+  // Host applies scores exactly once per round
+  if (isHost() && gd.scored_round !== sess.current_round && _scoringRound !== sess.current_round) {
+    _scoringRound = sess.current_round;
+    await hostApplyScores(gd);
+  }
+
+  // Every client shows the reveal overlay once per round
+  if (_shownRevealRound !== sess.current_round) {
+    _shownRevealRound = sess.current_round;
+    // Reload players so scores are fresh
+    const { data: freshPlayers } = await sb.from('players').select('*').eq('session_id', sess.id).order('turn_order');
+    if (freshPlayers) state.players = freshPlayers;
+    showRevealOverlay(gd);
   }
 }
 
-async function revealAnswers(votes) {
+async function hostApplyScores(gd) {
   const sess = state.session;
   const idx = Math.min(sess.current_question_index, MISCONCEPTIONS_QUESTIONS.length - 1);
   const q = MISCONCEPTIONS_QUESTIONS[idx];
-  const active = state.players.filter(p=>p.is_active);
-
-  // Update scores
-  for (const p of active) {
-    const voted = votes[p.id];
-    if (voted === q.truth) {
+  const votes = gd.round_votes || {};
+  for (const p of state.players.filter(p=>p.is_active)) {
+    if (votes[p.id] === q.truth) {
       await sb.from('players').update({ score: p.score + 5 }).eq('id', p.id);
     }
   }
+  await sb.from('game_sessions').update({
+    game_data: { ...gd, scored_round: sess.current_round }
+  }).eq('id', sess.id);
+}
 
-  // Build reveal
+function showRevealOverlay(gd) {
+  const sess = state.session;
+  const idx = Math.min(sess.current_question_index, MISCONCEPTIONS_QUESTIONS.length - 1);
+  const q = MISCONCEPTIONS_QUESTIONS[idx];
+  const votes = gd.round_votes || {};
+  const active = state.players.filter(p=>p.is_active);
+
   document.getElementById('revealTruth').textContent = `✓ "${q.statements[q.truth]}"`;
   document.getElementById('revealExplanation').textContent = `💡 ${q.explanation}`;
-
   document.getElementById('revealVotes').innerHTML = active.map(p => {
     const voted = votes[p.id];
     const correct = voted === q.truth;
@@ -578,44 +594,56 @@ async function revealAnswers(votes) {
     </div>`;
   }).join('');
 
-  const isMain = isHost();
-  document.getElementById('revealNextBtn').style.display = isMain ? 'inline-block' : 'none';
+  document.getElementById('revealNextBtn').style.display = 'none'; // countdown handles advance
   document.getElementById('revealOverlay').classList.add('show');
-  await loadGameState();
   startRevealCountdown();
 }
 
+let _advancingRound = null;
 async function nextRound() {
   clearRevealTimer();
   document.getElementById('revealOverlay').classList.remove('show');
   const sess = state.session;
-  const nextR = (sess.current_round || 1) + 1;
+  const fromRound = sess.current_round || 1;
+  if (_advancingRound === fromRound) return;
+  _advancingRound = fromRound;
+  const nextR = fromRound + 1;
 
   if (nextR > 10 || sess.current_question_index + 1 >= MISCONCEPTIONS_QUESTIONS.length) {
     await finishGame(); return;
   }
-  const active = state.players.filter(p=>p.is_active);
   await sb.from('game_sessions').update({
     current_round: nextR,
     current_question_index: sess.current_question_index + 1,
-    current_player_id: active[0].id,
-    game_data: { ...sess.game_data, round_votes: {} }
+    game_data: { ...sess.game_data, round_votes: {}, scored_round: sess.game_data?.scored_round }
   }).eq('id', sess.id);
 }
 
 async function finishGame() {
-  await loadGameState();
-  const sorted = [...state.players].filter(p=>p.is_active).sort((a,b)=>b.score-a.score);
-  const winner = sorted[0];
-  await sb.from('game_sessions').update({ status: 'finished', game_data: { ...state.session.game_data, winner: winner.name } }).eq('id', state.session.id);
-  document.getElementById('winnerName').textContent = winner.name;
-  document.getElementById('finalScores').innerHTML = sorted.map((p,i) =>
-    `<div style="display:flex;align-items:center;gap:10px;margin:8px 0;justify-content:center">
-      <span style="font-size:1.2rem">${['🥇','🥈','🥉'][i]||''}</span>
+  const { data: freshPlayers } = await sb.from('players').select('*').eq('session_id', state.session.id).order('turn_order');
+  if (freshPlayers) state.players = freshPlayers;
+  const sorted = state.players.filter(p=>p.is_active).sort((a,b)=>b.score-a.score);
+  const topScore = sorted[0]?.score ?? 0;
+  const winners = sorted.filter(p => p.score === topScore);
+  const tie = winners.length > 1;
+  const winnerText = winners.map(p => p.name).join(' & ');
+  await sb.from('game_sessions').update({ status: 'finished', game_data: { ...state.session.game_data, winner: winnerText, tie } }).eq('id', state.session.id);
+  showGameOver(winnerText, tie, sorted);
+}
+
+function showGameOver(winnerText, tie, sorted) {
+  const topScore = sorted[0]?.score ?? 0;
+  const numTop = sorted.filter(x => x.score === topScore).length;
+  document.getElementById('winnerName').textContent = tie ? 'Égalité !' : winnerText;
+  document.getElementById('gameOverOverlay').classList.add('show');
+  document.getElementById('finalScores').innerHTML = sorted.map((p,i) => {
+    const medal = p.score === topScore ? '🥇' : (['🥈','🥉'][i - numTop] || '');
+    return `<div style="display:flex;align-items:center;gap:10px;margin:8px 0;justify-content:center">
+      <span style="font-size:1.2rem">${medal}</span>
       <span style="font-weight:600">${p.name}</span>
       <span style="color:#4facfe;font-weight:800">${p.score} pts</span>
-    </div>`).join('');
-  document.getElementById('gameOverOverlay').classList.add('show');
+    </div>`;
+  }).join('');
 }
 
 async function leaveGame() {
@@ -634,18 +662,11 @@ function subscribeRealtime() {
         clearRevealTimer();
         document.getElementById('revealOverlay').classList.remove('show');
       }
-      const prev = state.session;
       state.session = payload.new;
       const gd = payload.new.game_data || {};
-      const active = state.players.filter(p=>p.is_active);
-      const allVoted = active.every(p => gd.round_votes?.[p.id] !== undefined);
-
-      if (allVoted && payload.new.status === 'playing' && state.myPlayer?.turn_order !== 0) {
-        setTimeout(() => revealAnswers(gd.round_votes), 400);
-      }
       if (payload.new.status === 'finished' && gd.winner) {
-        document.getElementById('winnerName').textContent = gd.winner;
-        document.getElementById('gameOverOverlay').classList.add('show');
+        const sorted = [...state.players].filter(p=>p.is_active).sort((a,b)=>b.score-a.score);
+        showGameOver(gd.winner, !!gd.tie, sorted);
       }
       renderAll();
     })
