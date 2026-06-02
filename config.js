@@ -17,307 +17,256 @@ const PLAYER_COLORS = [
 ];
 
 const LUDO_QUESTIONS = [
-  // ---- FACILE (10) ----
-  {
-    level: 'easy',
-    question: "Quel est le nom de l'assistant IA développé par Anthropic ?",
-    options: ["GPT", "Claude", "Gemini", "Copilot"],
-    answer: 1
-  },
-  {
-    level: 'easy',
-    question: "Claude est développé par quelle entreprise ?",
-    options: ["OpenAI", "Google", "Anthropic", "Meta"],
-    answer: 2
-  },
-  {
-    level: 'easy',
-    question: "Quelle interface permet d'accéder à Claude depuis le terminal ?",
-    options: ["Claude Desktop", "Claude CLI", "Claude Code", "Claude API"],
-    answer: 2
-  },
-  {
-    level: 'easy',
-    question: "Comment s'appelle le principe de sécurité central de Claude ?",
-    options: ["AI Safety", "Constitutional AI", "Safe Prompting", "Alignment First"],
-    answer: 1
-  },
-  {
-    level: 'easy',
-    question: "Claude peut-il générer des images ?",
-    options: ["Oui, nativement", "Non, il est text-only", "Seulement avec plugins", "Oui avec Claude Pro"],
-    answer: 1
-  },
-  {
-    level: 'easy',
-    question: "Quelle est la famille de modèles la plus récente de Claude ?",
-    options: ["Claude 2", "Claude 3", "Claude 4", "Claude X"],
-    answer: 2
-  },
-  {
-    level: 'easy',
-    question: "Que signifie 'context window' pour un LLM ?",
-    options: ["L'interface graphique", "La quantité de texte traitable en une fois", "La vitesse de réponse", "Le nombre d'utilisateurs"],
-    answer: 1
-  },
-  {
-    level: 'easy',
-    question: "Claude Haiku est caractérisé par :",
-    options: ["La plus haute intelligence", "La rapidité et le faible coût", "Le plus grand context window", "Les meilleures capacités créatives"],
-    answer: 1
-  },
-  {
-    level: 'easy',
-    question: "Que peut faire Claude avec des fichiers PDF ?",
-    options: ["Rien", "Les lire et analyser leur contenu", "Les modifier directement", "Les convertir en images uniquement"],
-    answer: 1
-  },
-  {
-    level: 'easy',
-    question: "Quel modèle Claude est le plus puissant pour les tâches complexes ?",
-    options: ["Haiku", "Sonnet", "Opus", "Nano"],
-    answer: 2
-  },
+  // ---- 1. Comment un modèle de langage... ----
+  {level:'easy',question:"Comment un modèle de langage comme Claude génère-t-il ses réponses ?",options:["En cherchant dans une base de données de réponses préenregistrées","En prédisant statistiquement les fragments de texte (tokens) les plus probables étant donné le contexte","En exécutant des règles logiques programmées par des ingénieurs","En consultant internet en temps réel à chaque requête"],answer:1},
 
-  // ---- MOYEN (10) ----
-  {
-    level: 'medium',
-    question: "Un token correspond approximativement à combien de caractères en anglais ?",
-    options: ["1 caractère", "4 caractères", "10 caractères", "1 mot entier"],
-    answer: 1
-  },
-  {
-    level: 'medium',
-    question: "Quel est le context window de Claude 3.5 Sonnet ?",
-    options: ["32k tokens", "100k tokens", "200k tokens", "1M tokens"],
-    answer: 2
-  },
-  {
-    level: 'medium',
-    question: "Claude.ai est :",
-    options: ["Une API", "L'interface web grand public de Claude", "Un modèle spécifique", "Un outil de développement"],
-    answer: 1
-  },
-  {
-    level: 'medium',
-    question: "Le 'prompt caching' permet de :",
-    options: ["Sauvegarder les conversations", "Réduire les coûts en réutilisant des parties du contexte", "Accélérer le rendu", "Stocker les fichiers uploadés"],
-    answer: 1
-  },
-  {
-    level: 'medium',
-    question: "Qu'est-ce qu'un 'system prompt' ?",
-    options: ["Un prompt d'urgence", "Les instructions initiales données à Claude avant la conversation", "Le prompt par défaut", "Un prompt généré automatiquement"],
-    answer: 1
-  },
-  {
-    level: 'medium',
-    question: "L'API Claude utilise quel format pour les échanges ?",
-    options: ["XML", "GraphQL", "REST/JSON", "gRPC"],
-    answer: 2
-  },
-  {
-    level: 'medium',
-    question: "Qu'est-ce que le 'tool use' (function calling) dans Claude ?",
-    options: ["L'utilisation de raccourcis clavier", "La capacité de Claude à appeler des fonctions/outils externes", "Un mode de débogage", "L'accès aux fichiers système"],
-    answer: 1
-  },
-  {
-    level: 'medium',
-    question: "Claude Opus 4 vs Haiku 4.5 : lequel est le plus rapide ?",
-    options: ["Opus 4", "Haiku 4.5", "Ils sont équivalents", "Dépend de la tâche"],
-    answer: 1
-  },
-  {
-    level: 'medium',
-    question: "Qu'est-ce que 'claude.ai/code' ?",
-    options: ["Un éditeur de code en ligne", "L'interface web Claude Code", "La documentation API", "Un repo GitHub"],
-    answer: 1
-  },
-  {
-    level: 'medium',
-    question: "Le Batch API de Claude permet de :",
-    options: ["Traiter plusieurs requêtes en parallèle à coût réduit", "Grouper les conversations", "Sauvegarder l'historique", "Partager des sessions"],
-    answer: 0
-  },
+  // ---- 2. Pourquoi une réponse vague... ----
+  {level:'easy',question:"Pourquoi une réponse vague à un prompt vague n'est-elle pas un bug ?",options:["C'est un bug — Claude devrait toujours demander des clarifications avant de répondre","C'est voulu — Claude simplifie délibérément pour éviter les erreurs","Le modèle optimise pour la plausibilité par rapport au contexte fourni : un contexte flou génère une réponse plausible dans le vide","Ce n'est jamais vague — Claude choisit automatiquement la meilleure interprétation possible"],answer:2},
 
-  // ---- DIFFICILE (10) ----
-  {
-    level: 'hard',
-    question: "Dans Claude Code, qu'est-ce qu'un 'hook' ?",
-    options: ["Un plugin tiers", "Un script shell qui s'exécute en réponse à des événements (pre/post tool use)", "Une commande slash", "Un raccourci clavier"],
-    answer: 1
-  },
-  {
-    level: 'hard',
-    question: "Quelle est la différence entre Claude Code CLI et l'extension VS Code ?",
-    options: ["Aucune différence", "Le CLI tourne dans le terminal, l'extension s'intègre dans l'IDE avec même moteur", "L'extension est plus limitée", "Le CLI ne supporte pas les MCP"],
-    answer: 1
-  },
-  {
-    level: 'hard',
-    question: "Un 'Skill' dans Claude Code est :",
-    options: ["Un modèle fine-tuné", "Un workflow orchestré via le Skill tool, invocable par /slash-command", "Une permission système", "Un type de mémoire"],
-    answer: 1
-  },
-  {
-    level: 'hard',
-    question: "Le context window de 200k tokens représente environ combien de pages A4 ?",
-    options: ["~50 pages", "~150 pages", "~500 pages", "~1500 pages"],
-    answer: 1
-  },
-  {
-    level: 'hard',
-    question: "Qu'est-ce que le 'MCP' (Model Context Protocol) ?",
-    options: ["Un protocole de compression", "Un protocole open-source pour connecter Claude à des outils/données externes", "Un format de fichier", "Une méthode d'authentification"],
-    answer: 1
-  },
-  {
-    level: 'hard',
-    question: "Claude Code peut gérer plusieurs worktrees git en parallèle pour :",
-    options: ["Sauvegarder des versions", "Permettre à des agents d'éditer des fichiers sans conflits", "Synchroniser avec GitHub", "Créer des branches automatiquement"],
-    answer: 1
-  },
-  {
-    level: 'hard',
-    question: "Dans le Workflow SDK de Claude Code, pipeline() vs parallel() : quelle est la différence clé ?",
-    options: ["Aucune", "pipeline() n'a pas de barrière entre stages (plus rapide), parallel() attend tous les résultats", "parallel() est plus rapide", "pipeline() est synchrone"],
-    answer: 1
-  },
-  {
-    level: 'hard',
-    question: "Le 'prompt caching' est automatiquement activé pour les blocs de plus de :",
-    options: ["1024 tokens", "2048 tokens", "4096 tokens", "8192 tokens"],
-    answer: 0
-  },
-  {
-    level: 'hard',
-    question: "Que fait la commande /compact dans Claude Code ?",
-    options: ["Compresse les fichiers", "Résume le contexte de conversation pour libérer de la fenêtre contextuelle", "Optimise le code", "Réduit les permissions"],
-    answer: 1
-  },
-  {
-    level: 'hard',
-    question: "Constitutional AI (CAI) est une approche qui :",
-    options: ["Limite les capacités de Claude", "Entraîne Claude à s'auto-critiquer selon des principes constitutionnels définis", "Chiffre les données", "Restreint l'API"],
-    answer: 1
-  }
+  // ---- 3. Qu'est-ce que l'hallucination... ----
+  {level:'easy',question:"Qu'est-ce que l'hallucination dans un LLM ?",options:["La tendance du modèle à produire des réponses trop créatives ou poétiques","La génération de contenu faux présenté avec confiance, sans aucun signal d'erreur","Une erreur visuelle dans l'interface de l'outil","Le fait que le modèle retourne une erreur explicite quand il ne sait pas répondre"],answer:1},
+
+  // ---- 4. Pourquoi dit-on... ----
+  {level:'easy',question:"Pourquoi dit-on qu'un LLM \"hallucine\" plutôt qu'il \"ment\" ?",options:["Pour minimiser la gravité des erreurs dans la communication publique","Parce que les erreurs surviennent uniquement sur des sujets créatifs","Mentir implique une intention consciente de tromper — le modèle génère du plausible sans conscience de sa fausseté","Parce que le modèle signale toujours ses incertitudes en fin de réponse"],answer:2},
+
+  // ---- 5. Un LLM... meilleur en anglais... ----
+  {level:'easy',question:"Un LLM (Large Language Model) est-il meilleur en anglais qu'en français ? Pour quelle raison ?",options:["Non — les LLMs modernes sont entraînés de manière parfaitement équilibrée sur toutes les langues","Oui légèrement — les corpus d'entraînement contiennent beaucoup plus de texte anglais issu d'internet","Oui, massivement — le français est structurellement incompatible avec l'architecture transformer","Cela dépend uniquement du pays d'origine de la société qui développe le modèle"],answer:1},
+
+  // ---- 6. Qu'est-ce que le knowledge cutoff... ----
+  {level:'easy',question:"Qu'est-ce que le \"knowledge cutoff\" (date de coupure) d'un modèle ?",options:["La limite maximale de longueur des réponses générées","La date au-delà de laquelle les données d'entraînement n'ont pas été incluses — le modèle ignore ce qui s'est passé après","Le nombre maximal de requêtes autorisées par heure","La taille limite des fichiers qu'on peut uploader"],answer:1},
+
+  // ---- 7. Quelle affirmation sur la mémoire... ----
+  {level:'easy',question:"Quelle affirmation sur la mémoire d'un LLM est correcte ?",options:["Le modèle mémorise toutes les conversations pour s'améliorer en temps réel","Le modèle n'a aucune forme de mémoire possible — c'est une limite définitive et irréductible","Le modèle n'a pas de mémoire persistante par défaut, mais on peut lui en donner via le contexte de la conversation ou des outils dédiés","Le modèle mémorise automatiquement les conversations de plus de 10 messages"],answer:2},
+
+  // ---- 8. Qu'est-ce que la tokenization... ----
+  {level:'easy',question:"Qu'est-ce que la tokenization (le découpage en tokens) ?",options:["Le chiffrement des prompts avant leur envoi au serveur","La découpe du texte en sous-unités appelées tokens sur lesquelles le modèle opère réellement","La facturation à la lettre des API d'IA","Le processus de validation des réponses avant leur affichage à l'utilisateur"],answer:1},
+
+  // ---- 9. Pourquoi 1 mot français... ----
+  {level:'easy',question:"Pourquoi 1 mot français peut-il valoir plus d'1 token ?",options:["Parce que le français a plus de caractères accentués qui nécessitent un encodage spécial","Parce que le découpage en tokens se base sur les sous-mots les plus fréquents — les données d'entraînement sont majoritairement en anglais","Parce que les espaces et ponctuations comptent comme des tokens séparés uniquement en français","Parce que les modèles convertissent tout en UTF-8 avant traitement, ce qui fragmente les caractères accentués"],answer:1},
+
+  // ---- 10. Qu'est-ce que le RLHF... ----
+  {level:'easy',question:"Qu'est-ce que le RLHF (Reinforcement Learning from Human Feedback) ?",options:["Un protocole de sécurité pour protéger les données d'entraînement contre les fuites","Une technique d'évaluation automatique des réponses par un second modèle IA","Un processus d'entraînement où des humains notent les réponses du modèle, et ces notes orientent le comportement futur du modèle","Un format de prompt optimisé pour améliorer les performances sur des tâches répétitives"],answer:2},
+
+  // ---- 11. Quelle règle approximative... ----
+  {level:'easy',question:"Quelle règle approximative s'applique aux tokens en français ?",options:["1 mot = 0,75 token","1 mot = 1 token exactement","1 mot ≈ 1,3 token","1 mot ≈ 2 tokens"],answer:2},
+
+  // ---- 12. Qu'est-ce que la fenêtre de contexte... ----
+  {level:'easy',question:"Qu'est-ce que la \"fenêtre de contexte\" (context window) d'un modèle ?",options:["L'interface graphique dans laquelle on tape les messages","La quantité maximale de tokens — prompt + historique de conversation + réponse — que le modèle peut traiter en une seule fois","Le nombre de conversations simultanées que le modèle peut gérer","La durée maximale d'une session avant déconnexion automatique"],answer:1},
+
+  // ---- 13. Que se passe-t-il... ----
+  {level:'easy',question:"Que se passe-t-il concrètement quand une conversation dépasse la fenêtre de contexte ?",options:["Le modèle retourne une erreur explicite et s'arrête","La qualité des réponses reste identique mais la vitesse de génération diminue","Le modèle commence à ignorer les informations les plus anciennes de la conversation pour libérer de l'espace","Le modèle bascule automatiquement sur un modèle plus puissant avec une fenêtre plus grande"],answer:2},
+
+  // ---- 14. Combien de tokens... ----
+  {level:'easy',question:"Combien de tokens représente approximativement un transcript de réunion d'1 heure ?",options:["2 000 – 4 000 tokens","8 000 – 10 000 tokens","15 000 – 25 000 tokens","60 000 – 80 000 tokens"],answer:2},
+
+  // ---- 15. Pourquoi économiser des tokens... ----
+  {level:'easy',question:"Pourquoi économiser des tokens améliore-t-il la qualité des réponses ?",options:["Moins de tokens en entrée = temps de traitement réduit = moins d'erreurs liées à la charge serveur","Un contexte dense en information utile concentre l'attention du modèle sur l'essentiel, au lieu de la diluer sur du bruit","Un prompt court active un mode 'focus' interne du modèle","Les tokens économisés en entrée sont automatiquement réinvestis dans une réponse plus longue"],answer:1},
+
+  // ---- 16. Tu dois analyser... ----
+  {level:'easy',question:"Tu dois analyser un export CRM de 800 lignes. Quelle est la meilleure approche pour préserver la fenêtre de contexte ?",options:["Coller les 800 lignes en une fois — le modèle sait naturellement quoi regarder","Filtrer uniquement les colonnes et lignes pertinentes avant de coller","Envoyer le fichier XLSX brut — c'est plus compact qu'un CSV","Résumer le fichier manuellement en langage naturel avant de le soumettre"],answer:1},
+
+  // ---- 17. Entre un fichier XLSX... ----
+  {level:'easy',question:"Entre un fichier XLSX et un CSV pour un même tableau, lequel consomme le moins de tokens ?",options:["XLSX — mieux structuré, donc plus facile à parser pour le modèle","CSV — texte brut sans métadonnées, formules ni styles inutiles à traiter","ODS — plus léger par conception","PDF — compressé, donc plus petit une fois envoyé"],answer:1},
+
+  // ---- 18. Quand un prompt contient... ----
+  {level:'easy',question:"Quand un prompt contient un long document à analyser, dans quel ordre présenter les éléments ?",options:["Document en premier, puis les instructions","La question principale en premier, puis le document, puis les instructions","Instructions d'abord, puis le document — ce que le modèle lit en premier cadre tout le traitement qui suit","L'ordre n'a aucun impact mesurable sur les modèles modernes"],answer:2},
+
+  // ---- 19. Lequel de ces deux prompts... ----
+  {level:'easy',question:"Lequel de ces deux prompts est à la fois plus économe en tokens ET plus efficace ?",options:["Je souhaite que tu rédiges un email. Il doit être court. Le ton doit être professionnel.","Rédige un email court et professionnel.","Email svp","Les options A et B sont équivalentes en efficacité, seule la longueur diffère"],answer:1},
+
+  // ---- 20. Parmi ces 4 signes... ----
+  {level:'easy',question:"Parmi ces 4 signes, lequel N'indique PAS que la fenêtre de contexte est saturée ?",options:["Le modèle ignore des instructions données en début de conversation","Le modèle contredit ce qu'il a affirmé 20 messages plus tôt","Le modèle répète des informations déjà fournies comme si c'était nouveau","Le modèle commence à répondre plus lentement qu'au début de la conversation"],answer:3},
+
+  // ---- 21. Quelle formule structure... ----
+  {level:'medium',question:"Quelle formule structure un prompt efficace ?",options:["SUJET + VERBE + COMPLÉMENT + STYLE","RÔLE + CONTEXTE + TÂCHE + FORMAT","QUI + QUOI + COMMENT + QUAND","OBJECTIF + CONTRAINTE + AUDIENCE + DEADLINE"],answer:1},
+
+  // ---- 22. Pourquoi donner un rôle... ----
+  {level:'medium',question:"Pourquoi donner un rôle à un LLM améliore-t-il ses réponses ?",options:["Cela active un modèle spécialisé différent en arrière-plan","Cela réduit la consommation de tokens en entrée","Cela cadre le registre, le niveau d'expertise et le style de raisonnement du modèle pour toute la réponse","C'est une obligation pour les usages professionnels, pas pour les usages personnels"],answer:2},
+
+  // ---- 23. Parmi ces 4 prompts... ----
+  {level:'medium',question:"Parmi ces 4 prompts pour rédiger un email de relance, lequel est le plus efficace ?",options:["Rédige un email de relance.","Rédige un email de relance professionnel et court pour un prospect.","Tu es business developer. Relance un DAF après une démo. Style direct, 3 paragraphes max, commence par un problème concret.","Rédige le meilleur email de relance possible pour un prospect important, en étant convaincant."],answer:2},
+
+  // ---- 24. Quel est le problème... ----
+  {level:'medium',question:"Quel est le problème dans ce prompt : 'Résume ce rapport, traduis-le en anglais, et propose 3 angles pour une présentation' ?",options:["Il n'y a pas de problème — c'est un bon prompt multi-tâches bien formulé","Il contient trop de tâches — Claude ne peut traiter qu'une seule demande à la fois","Les 3 tâches sont données sans numérotation ni séquence explicite, ce qui peut mener à un traitement désordonné ou à bâcler les dernières","Il manque le rôle et le format — sans eux, Claude refusera de répondre"],answer:2},
+
+  // ---- 25. Comment corriger Claude... ----
+  {level:'medium',question:"Comment corriger Claude si sa réponse ne correspond pas à ce que tu attendais ?",options:["Supprimer la conversation et recommencer depuis zéro avec un prompt différent","Changer de modèle — le modèle actuel a atteint ses limites","Expliquer précisément ce qui ne va pas et demander une correction ciblée dans la même conversation","Régénérer la même réponse plusieurs fois jusqu'à obtenir un résultat satisfaisant"],answer:2},
+
+  // ---- 26. Qu'est-ce qu'une contrainte négative... ----
+  {level:'medium',question:"Qu'est-ce qu'une \"contrainte négative\" dans un prompt ?",options:["Un prompt formulé à la forme négative grammaticalement","Réduire la longueur du prompt au strict minimum pour ne pas surcharger le contexte","Spécifier explicitement ce qu'on ne veut PAS voir dans la réponse — parfois plus efficace que décrire ce qu'on veut","Imposer une limite numérique stricte sur la réponse"],answer:2},
+
+  // ---- 27. Pourquoi la technique... ----
+  {level:'medium',question:"Pourquoi la technique \"réfléchis étape par étape\" améliore-t-elle les réponses sur des tâches analytiques ?",options:["Elle alloue dynamiquement plus de puissance de calcul à la requête","Elle force la génération de tokens intermédiaires de raisonnement qui servent de mémoire de travail au modèle","Elle active un module de vérification logique interne distinct","Elle réduit automatiquement la température (l'aléatoire) du modèle"],answer:1},
+
+  // ---- 28. Tu veux que Claude... ----
+  {level:'medium',question:"Tu veux que Claude écrive dans ton style personnel. Quelle est la méthode la plus efficace ?",options:["Décrire ton style avec des adjectifs","Coller un exemple d'un texte que tu as écrit et qui te plaît, puis demander de produire dans ce style","Choisir le style 'Concis' dans les paramètres de l'interface","Demander à Claude de choisir lui-même le style le plus approprié au contexte"],answer:1},
+
+  // ---- 29. Lequel de ces deux prompts... ----
+  {level:'medium',question:"Lequel de ces deux prompts produit une meilleure analyse de données ?",options:["Voici notre base client complète. Analyse-la et dis-moi ce qui est intéressant.","Voici les 30 deals perdus du Q1. Identifie les causes récurrentes. Format : tableau synthétique.","Les deux sont équivalents — plus de données fournies = meilleure analyse","Le premier est meilleur — le contexte complet aide le modèle à trouver des patterns inattendus"],answer:1},
+
+  // ---- 30. À quel moment... ----
+  {level:'medium',question:"À quel moment faut-il investir le plus de temps dans la rédaction d'un prompt ?",options:["Toujours — tous les prompts méritent le même soin","Jamais — l'itération après coup est toujours plus efficace que la préparation initiale","Pour les livrables importants — pas pour les tâches internes rapides","Uniquement quand on utilise le modèle le plus puissant disponible"],answer:2},
+
+  // ---- 31. Parmi ces 4 prompts... ----
+  {level:'medium',question:"Parmi ces 4 prompts pour une analyse de pipeline, lequel est le MOINS efficace ?",options:["Voici un export CSV pipeline. Identifie les deals bloqués depuis +21 jours et les 3 actions prioritaires.","Analyse mon pipeline.","Je prépare une revue pipeline. Voici les données. Signale les deals à risque : inactivité > 3 semaines, montant > 50k€, date de closing passée.","En tant que consultant RevOps, analyse ce pipeline et classe les risques du plus critique au moins critique."],answer:1},
+
+  // ---- 32. Que se passe-t-il... ----
+  {level:'medium',question:"Que se passe-t-il si tu fournis un exemple de livrable réussi dans ton prompt ?",options:["Claude se contente de le copier mot pour mot sans ajouter de valeur","Claude l'utilise comme référence de structure, ton et format pour produire quelque chose de similaire et adapté à ton nouveau besoin","Claude le considère comme un document à analyser et résumer, pas comme une référence stylistique","Ça n'a aucun impact measurable — Claude ignore les exemples fournis"],answer:1},
+
+  // ---- 33. Quelle est la principale différence... ----
+  {level:'medium',question:"Quelle est la principale différence entre Claude Opus et Claude Haiku ?",options:["Opus est multimodal (texte + image), Haiku est uniquement text-only","Opus est plus puissant et nuancé mais plus lent et coûteux ; Haiku est rapide et économique pour des tâches simples","Opus fonctionne en ligne uniquement ; Haiku peut fonctionner en local sur un ordinateur","Opus a une fenêtre de contexte 10x plus grande qu'Haiku"],answer:1},
+
+  // ---- 34. Pour quel cas d'usage... ----
+  {level:'medium',question:"Pour quel cas d'usage un modèle léger et rapide (type Haiku) est-il le plus adapté ?",options:["Rédiger une proposition commerciale stratégique pour un grand compte","Analyser un contrat complexe avec des enjeux juridiques et financiers","Classifier automatiquement des milliers de tickets CRM via l'API","Produire un audit complet avec recommandations stratégiques"],answer:2},
+
+  // ---- 35. Pourquoi utiliser... ----
+  {level:'medium',question:"Pourquoi utiliser un modèle moins puissant pour des tâches simples est-il une bonne pratique ?",options:["Les modèles moins puissants font statistiquement moins d'erreurs sur les tâches simples","Cela économise du coût et du temps sans sacrifier la qualité, car la tâche ne nécessite pas de profondeur de raisonnement","Les modèles puissants refusent automatiquement les tâches qu'ils jugent trop simples","Cela libère des ressources serveur pour les autres utilisateurs de la plateforme"],answer:1},
+
+  // ---- 36. Qu'est-ce qu'un modèle multimodal... ----
+  {level:'medium',question:"Qu'est-ce qu'un modèle \"multimodal\" ?",options:["Un modèle qui génère plusieurs formats de réponse simultanément","Un modèle capable de traiter différents types d'inputs : texte, image, audio, voire vidéo","Un modèle distribué sur plusieurs serveurs pour plus de résilience","Un modèle qui supporte plusieurs langues sans perte de qualité"],answer:1},
+
+  // ---- 37. Quelle est la différence... ----
+  {level:'medium',question:"Quelle est la différence entre l'entraînement (training) et l'inférence (inference) d'un modèle ?",options:["L'entraînement génère des réponses, l'inférence améliore le modèle en continu","L'entraînement apprend les paramètres du modèle à partir de données ; l'inférence utilise ces paramètres pour générer une réponse à un input","L'entraînement se fait en cloud, l'inférence se fait nécessairement en local","Ce sont deux termes synonymes désignant le même processus technique"],answer:1},
+
+  // ---- 38. Qu'est-ce que le fine-tuning... ----
+  {level:'medium',question:"Qu'est-ce que le fine-tuning (ajustement fin) d'un modèle ?",options:["L'ajustement manuel des réponses par des modérateurs humains après publication","L'entraînement supplémentaire d'un modèle existant sur des données spécifiques pour le spécialiser","L'optimisation des paramètres de vitesse et de coût d'inférence","Un processus de validation des réponses avant déploiement en production"],answer:1},
+
+  // ---- 39. Pourquoi les LLMs... ----
+  {level:'medium',question:"Pourquoi les LLMs ne peuvent-ils pas accéder à internet par défaut ?",options:["Pour des raisons de sécurité — internet contient des contenus qui pourraient corrompre les réponses","Pour des raisons de coût — chaque requête web ajouterait un coût prohibitif","Par conception — un LLM est un modèle de prédiction de texte, pas un navigateur. L'accès web est un outil ajouté séparément au-dessus du modèle","Parce qu'internet évolue trop vite pour être utile à un modèle avec un knowledge cutoff"],answer:2},
+
+  // ---- 40. Qu'est-ce que la temperature... ----
+  {level:'medium',question:"Qu'est-ce que la \"temperature\" (température) dans les paramètres d'un LLM ?",options:["La chaleur physique dégagée par les serveurs pendant l'inférence","Un paramètre contrôlant l'aléatoire des réponses : basse = déterministe et factuel, haute = créatif et varié","La vitesse de génération des tokens en sortie","La tolérance du modèle aux fautes de grammaire dans les prompts"],answer:1},
+
+  // ---- 41. Quelle est la différence... ----
+  {level:'hard',question:"Quelle est la différence fondamentale entre une app de chat IA et un agent IA ?",options:["L'agent est un modèle plus intelligent que l'app de chat","L'app de chat répond à des questions dans une interface ; l'agent peut enchaîner des actions autonomes dans des fichiers, un terminal, des outils externes","L'agent nécessite un abonnement spécial ; l'app de chat est accessible à tous","L'app de chat supporte les images en input ; l'agent traite uniquement du texte"],answer:1},
+
+  // ---- 42. Qu'est-ce que MCP... ----
+  {level:'hard',question:"Qu'est-ce que MCP (Model Context Protocol) ?",options:["Un protocole de sécurité pour chiffrer les échanges entre Claude et les APIs externes","Un format de fichier standardisé pour les prompts systèmes avancés","Un standard ouvert permettant à un LLM de se connecter à des outils et sources de données externes, et d'agir dedans","Un protocole de compression des tokens pour réduire les coûts d'API"],answer:2},
+
+  // ---- 43. Quelle est la différence concrète... ----
+  {level:'hard',question:"Quelle est la différence concrète entre utiliser un outil connecté via MCP vs sans connexion ?",options:["Avec connexion, Claude est plus précis sur les données HubSpot car il a accès à plus de contexte","Sans connexion : export manuel → copier dans Claude → copier la réponse → remettre dans l'outil. Avec connexion : Claude agit directement dans l'outil en une seule commande","Avec connexion, Claude bascule sur un modèle plus puissant pour gérer l'outil","Il n'y a aucune différence fonctionnelle, seulement un gain de vitesse"],answer:1},
+
+  // ---- 44. Qu'est-ce que le Deep Research... ----
+  {level:'hard',question:"Qu'est-ce que le \"Deep Research\" (recherche approfondie) dans une interface IA ?",options:["Une recherche qui utilise automatiquement le modèle le plus puissant disponible","Une recherche web classique avec affichage des sources en bas de page","Un mode où le modèle effectue plusieurs requêtes de recherche itératives, synthétise des sources multiples et produit un rapport structuré avec citations","Une recherche dans les fichiers uploadés dans la conversation en cours"],answer:2},
+
+  // ---- 45. Qu'est-ce qu'un Artifact... ----
+  {level:'hard',question:"Qu'est-ce qu'un \"Artifact\" dans le contexte d'une interface IA moderne ?",options:["Une erreur de génération identifiée et signalée dans la réponse","Un fichier ou interface (HTML, PPTX, XLSX, app interactive) généré par Claude et affiché dans un panneau dédié, téléchargeable ou modifiable","Un connecteur vers un outil externe","Un template de prompt sauvegardé pour réutilisation future"],answer:1},
+
+  // ---- 46. Quel est l'avantage principal... ----
+  {level:'hard',question:"Quel est l'avantage principal d'utiliser des \"Projects\" (espaces de travail dédiés) dans une interface IA ?",options:["Accéder à des modèles exclusifs non disponibles en conversation standard","Donner à Claude un contexte permanent (rôle, instructions, fichiers de référence) évitant de tout réexpliquer à chaque nouvelle conversation","Partager automatiquement toutes les conversations avec son équipe","Bénéficier d'un quota de tokens supplémentaire par rapport à l'abonnement standard"],answer:1},
+
+  // ---- 47. Quel est le risque... ----
+  {level:'hard',question:"Quel est le risque d'activer trop de connecteurs MCP simultanément dans une session ?",options:["Claude peut confondre les outils et agir dans le mauvais outil","Chaque connecteur actif ajoute ses définitions d'outils disponibles dans la fenêtre de contexte, réduisant l'espace disponible pour la conversation","La vitesse de réponse diminue proportionnellement au nombre de connecteurs actifs","Les connecteurs peuvent entrer en conflit et provoquer des erreurs de sécurité entre eux"],answer:1},
+
+  // ---- 48. Pourquoi un agent IA... ----
+  {level:'hard',question:"Pourquoi un agent IA demande-t-il des confirmations avant certaines actions dans le terminal ?",options:["Pour générer un log détaillé de toutes les actions effectuées","Pour facturer séparément chaque action exécutée","Parce que les actions sur des fichiers ou dans un terminal sont souvent irréversibles — l'humain doit rester au contrôle","Parce que le modèle n'est pas suffisamment confiant pour agir en autonomie complète"],answer:2},
+
+  // ---- 49. Qu'est-ce que le Plan Mode... ----
+  {level:'hard',question:"Qu'est-ce que le \"Plan Mode\" dans un agent de code ?",options:["Un mode qui génère uniquement du pseudo-code (code non exécutable, conceptuel) sans rien écrire","Un mode en lecture seule où l'agent analyse le projet et produit un plan d'action sans modifier aucun fichier","Un mode qui génère un plan de projet au format Kanban (tableau de tâches)","Un mode qui ralentit volontairement l'exécution pour détecter les erreurs avant qu'elles arrivent"],answer:1},
+
+  // ---- 50. Quelle est la différence... ----
+  {level:'hard',question:"Quelle est la différence entre un \"style\" d'écriture et les instructions d'un \"Project\" dans Claude.ai ?",options:["Il n'y a aucune différence pratique — les deux servent à personnaliser Claude","Le style définit le ton et la forme d'écriture ; les instructions du Project définissent le contexte métier, le rôle et les règles de fond","Le style s'applique à tout l'espace de travail ; les instructions s'appliquent uniquement à la conversation en cours","Le style est une feature payante ; les instructions de Project sont gratuites pour tous"],answer:1},
+
+  // ---- 51-150 Remaining hard questions ----
+  {level:'hard',question:"Quelle est la différence entre un prompt ponctuel et une Skill ?",options:["Un prompt est oral, une Skill est écrite et sauvegardée","Un prompt est une instruction jetable pour une seule occasion ; une Skill est réutilisable, contextuelle et peut être partagée à toute une équipe","Un prompt consomme des tokens, une Skill est exécutée gratuitement","Il n'y a aucune différence — une Skill est simplement un prompt sauvegardé sous un nom"],answer:1},
+  {level:'hard',question:"Quelle est la différence de portée entre une Skill et un Project ?",options:["Skill = visible par un seul utilisateur, Project = visible par toute l'équipe","Skill = une tâche précise applicable partout ; Project = un contexte global lié à une mission ou un client spécifique","Skill = s'applique à toutes les conversations passées et futures, Project = uniquement aux nouvelles conversations","Il n'y a aucune différence de portée — les deux s'appliquent à l'ensemble du workspace"],answer:1},
+  {level:'hard',question:"Quel composant d'une Skill a le plus d'impact sur la qualité du résultat produit ?",options:["Le titre de la Skill","La longueur totale des instructions","Un exemple concret et réel de résultat attendu","Le nombre de règles listées dans les contraintes"],answer:2},
+  {level:'hard',question:"Quelle est l'erreur de conception la plus fréquente dans une Skill ?",options:["La rendre trop courte","L'écrire en français — Claude préfère les Skills en anglais","La rendre trop vague — sans tâche précise, format de sortie défini ou exemple de référence","L'activer manuellement plutôt que de la laisser s'activer automatiquement"],answer:2},
+  {level:'hard',question:"Quelle est la limite principale des Skills sur une interface web standard ?",options:["Les Skills ne fonctionnent pas sur mobile ou tablette","Les Skills ne supportent que les instructions textuelles — il n'est pas possible d'y joindre des fichiers","Les Skills expirent automatiquement après 90 jours sans utilisation","Les Skills ne peuvent pas être partagées entre membres d'une même organisation"],answer:1},
+  {level:'hard',question:"Pourquoi vaut-il mieux créer une Skill par tâche plutôt qu'une grande Skill ?",options:["Pour des raisons de facturation — chaque Skill est facturée séparément","Au-delà d'une certaine taille, la qualité de chargement se dégrade et les règles commencent à se neutraliser entre elles","Pour faciliter le partage des Skills avec des équipes externes","Parce que Claude ne peut charger qu'une seule Skill à la fois en mémoire"],answer:1},
+  {level:'hard',question:"Comment une Skill bien conçue se distingue-t-elle d'un simple prompt système ?",options:["Elle utilise une syntaxe Markdown spéciale que le modèle reconnaît automatiquement","Elle combine rôle, contexte métier précis, tâche déclenchante, format de sortie attendu et exemples réels de livrables","Elle est stockée dans un fichier séparé du contexte principal de la conversation","Il n'y a pas de différence structurelle — c'est exactement un prompt système avec un nom"],answer:1},
+  {level:'hard',question:"Tu réécris les mêmes instructions au début de chaque conversation. Quelle est la meilleure solution ?",options:["Créer un template de prompt dans un fichier texte local et faire du copier-coller","Configurer un Project avec ces instructions comme contexte permanent actif sur toutes les conversations du Project","Ajouter ces instructions dans chaque message avec un copier-coller plus rapide","Utiliser le modèle le plus puissant disponible, qui retient mieux le contexte implicitement"],answer:1},
+  {level:'hard',question:"Tu utilises Claude pour préparer une présentation avec des statistiques sectorielles. Que dois-tu faire avant de la livrer à un client ?",options:["Rien — Claude ne cite que des statistiques provenant de sources vérifiées","Vérifier tous les chiffres et statistiques dans des sources primaires (rapports officiels, études publiées)","Demander à Claude de sourcer chaque chiffre et lui faire confiance si une source est citée","Régénérer la présentation 3 fois et garder la version dont les chiffres sont les plus cohérents entre eux"],answer:1},
+  {level:'hard',question:"Claude améliore ton email mais le résultat ne ressemble pas à ce que tu voulais. Quelle est la cause probable ?",options:["Tu as utilisé le mauvais modèle — Opus aurait mieux compris l'intention","Tu n'as pas précisé tes critères d'amélioration — Claude améliore selon ses propres standards, pas les tiens","La feature 'Styles' n'était pas activée dans les paramètres","L'email de départ était trop court pour que Claude comprenne le contexte"],answer:1},
+  {level:'hard',question:"Dans quel cas faut-il systématiquement relire la sortie de Claude avant de l'utiliser ?",options:["Toujours, quelle que soit l'utilisation — même pour un brouillon interne","Jamais — si le prompt est bien construit, la sortie est fiable","Dès que la sortie est destinée à un client, un partenaire ou un usage externe","Uniquement si la sortie fait plus de 500 mots"],answer:2},
+  {level:'hard',question:"Quelle catégorie de donnée ne faut-il JAMAIS coller dans une conversation Claude.ai ?",options:["Le contenu d'un contrat client anonymisé (noms remplacés par 'Client X')","Les noms complets, emails et montants contractuels réels de clients identifiables","Des extraits de présentations internes non confidentielles","Des chiffres de pipeline agrégés sans mention d'aucune entreprise spécifique"],answer:1},
+  {level:'hard',question:"Quelle est la bonne réaction face à une première réponse de Claude décevante ?",options:["Changer de modèle — la première réponse mauvaise signale une limite du modèle","Reformuler entièrement le prompt dans une nouvelle conversation vierge","Identifier précisément ce qui ne va pas (ton, structure, contenu) et demander une correction ciblée","Accepter la réponse — Claude a fait de son mieux avec le contexte donné"],answer:2},
+  {level:'hard',question:"Un LLM peut-il remplacer un expert humain sur des décisions stratégiques complexes ?",options:["Oui, avec le bon prompt et le modèle le plus puissant disponible","Oui, sur les décisions analytiques mais pas sur les décisions impliquant de la créativité","Non — il manque la relation client, le jugement contextuel implicite et la responsabilité que porte un expert","Oui, uniquement sur des domaines pour lesquels il existe une abondante documentation en ligne"],answer:2},
+  {level:'hard',question:"Pourquoi demander à Claude de 'relire et critiquer son propre travail' après génération est-il utile ?",options:["Cela force l'utilisation d'un module de validation interne plus puissant","Cela crée une seconde passe critique qui améliore la précision et permet de signaler les faiblesses avant que tu n'y passes toi-même","C'est une manière de réduire les tokens consommés par la réponse finale","Cela active une vérification automatique des sources citées"],answer:1},
+  {level:'hard',question:"Dans quel ordre faut-il organiser un prompt pour optimiser la compréhension du modèle ?",options:["Tâche d'abord, contexte ensuite — pour aller directement à l'essentiel","Format en premier — pour cadrer la réponse dès le début du traitement","Contexte avant la tâche — ce que le modèle lit en premier influence l'ensemble du traitement","L'ordre est sans importance pour les modèles modernes avec de grandes fenêtres de contexte"],answer:2},
+  {level:'hard',question:"Tu as déjà un brouillon d'un livrable. Vaut-il mieux le donner à Claude ou lui demander de partir de zéro ?",options:["Partir de zéro — Claude produit de meilleurs résultats quand il n'est pas contraint par un brouillon existant","Donner le brouillon — Claude reste fidèle à ta structure et tes idées en améliorant la forme, sans dériver sur le fond","Donner le brouillon uniquement s'il fait moins de 200 mots","Cela dépend du modèle utilisé — Opus préfère partir de zéro, Sonnet préfère un brouillon"],answer:1},
+  {level:'hard',question:"Quels types de fichiers un LLM peut-il générer dans une interface moderne dotée d'Artifacts ?",options:["Uniquement du texte brut et du Markdown","PPTX (PowerPoint), DOCX (Word), XLSX (Excel), PDF, HTML, code — selon les capacités de la plateforme","Uniquement des formats texte — les fichiers binaires nécessitent des outils tiers spécifiques","N'importe quel type de fichier, y compris des vidéos et des images génératives"],answer:1},
+  {level:'hard',question:"Pour générer une présentation PowerPoint, quelle information est la MOINS utile à fournir ?",options:["Le public cible de la présentation","L'objectif de la présentation (convaincre, informer, vendre…)","La palette de couleurs précise en codes hexadécimaux","Le plan souhaité des sections"],answer:2},
+  {level:'hard',question:"Pourquoi est-il recommandé de générer un long document section par section plutôt qu'en une seule fois ?",options:["Claude ne peut pas générer plus de 2 pages de texte en une seule réponse","Cela consomme beaucoup moins de tokens au total","Cela permet de valider et corriger chaque partie au fur et à mesure, avec plus de contrôle sur la qualité finale","Claude génère de meilleures introductions quand il ne connaît pas encore la fin du document"],answer:2},
+  {level:'hard',question:"Quelle est la limite principale de Claude pour la génération de code ?",options:["Il ne supporte que Python et JavaScript — pas les autres langages","Il ne peut pas écrire plus de 100 lignes de code par réponse","Il génère du code fonctionnel mais qui doit être testé — des erreurs sont normales, surtout sur des logiques métier complexes ou des APIs qu'il connaît mal","Il ne peut pas intégrer d'APIs tierces dans le code qu'il génère"],answer:2},
+  {level:'hard',question:"Tu veux créer un dashboard HTML interactif à partir de données KPI. Quel prompt est le plus adapté ?",options:["Fais-moi un dashboard avec mes données.","Voici nos KPIs Q1. Crée un dashboard HTML avec graphiques en barres par mois, un tableau de synthèse et un code couleur rouge/vert selon les seuils.","Crée un beau tableau avec mes chiffres pour une présentation client.","Analyse mes KPIs et présente-les de manière visuelle et professionnelle."],answer:1},
+  {level:'hard',question:"Tu veux améliorer une section d'un document généré par Claude. Quelle est la meilleure approche ?",options:["Régénérer tout le document en ajoutant des contraintes supplémentaires","Dire exactement ce qui ne convient pas dans cette section et demander une correction ciblée","Copier uniquement cette section dans une nouvelle conversation","Changer de modèle pour la correction — Opus est meilleur pour affiner les livrables"],answer:1},
+  {level:'hard',question:"Claude peut-il lire le texte d'un PDF scanné aussi bien qu'un PDF natif ?",options:["Oui — Claude traite tous les types de PDF de manière identique","Oui, si le scan est en haute résolution (300 dpi minimum)","Non — Claude lit le texte encodé dans le fichier, pas les images de texte. La qualité d'extraction peut varier significativement","Non — Claude ne peut pas ouvrir de fichiers PDF du tout"],answer:2},
+  {level:'hard',question:"Qu'est-ce que le RAG (Retrieval Augmented Generation) ?",options:["Un type de modèle plus rapide que les architectures transformer classiques","Une technique qui enrichit les réponses d'un LLM en récupérant des documents pertinents depuis une base de données externe avant de générer la réponse","Un protocole de sécurité pour filtrer les contenus inappropriés dans les réponses","Un format de prompt spécialement optimisé pour les tâches de recherche documentaire"],answer:1},
+  {level:'hard',question:"Quelle est la différence entre l'IA générative et l'IA discriminative ?",options:["L'IA générative est supervisée, l'IA discriminative est non supervisée","L'IA générative crée du nouveau contenu (texte, image, code) ; l'IA discriminative classe, prédit une catégorie ou détecte un pattern","L'IA générative nécessite beaucoup plus de données d'entraînement que l'IA discriminative","L'IA discriminative est une sous-catégorie spécialisée de l'IA générative"],answer:1},
+  {level:'hard',question:"Qu'est-ce que le \"system prompt\" (prompt système) dans une conversation avec un LLM ?",options:["Le premier message visible envoyé par l'utilisateur dans la conversation","Un résumé automatique généré par le modèle au début d'une longue conversation","Des instructions données au modèle en amont de la conversation pour définir son comportement, son rôle et ses contraintes","Un message d'erreur retourné par le modèle quand la requête est incompréhensible"],answer:2},
+  {level:'hard',question:"Qu'est-ce que le \"chain-of-thought prompting\" (raisonnement en chaîne) ?",options:["Enchaîner plusieurs modèles différents en série pour obtenir une réponse finale affinée","Demander au modèle de détailler son raisonnement étape par étape avant de donner sa conclusion finale","Créer une chaîne de prompts liés dans des conversations séparées pour des tâches complexes","Un format structuré de prompt où chaque étape est numérotée dans une liste"],answer:1},
+  {level:'hard',question:"Quelle est la principale différence entre un modèle open source et un modèle propriétaire ?",options:["Les modèles open source sont toujours moins performants que les modèles propriétaires","Les modèles open source publient leurs poids (paramètres) et parfois leur code, permettant hébergement local, modification et utilisation sans abonnement","Les modèles open source sont toujours gratuits à l'usage final","Les modèles propriétaires ont systématiquement une fenêtre de contexte plus grande"],answer:1},
+  {level:'hard',question:"Qu'est-ce que le \"prompt injection\" (injection de prompt) ?",options:["Une technique d'optimisation pour améliorer les performances d'un modèle en production","Une attaque où du contenu malveillant inséré dans les données pousse le modèle à exécuter des instructions non voulues par l'opérateur","Une méthode pour injecter du contexte supplémentaire dans un prompt existant sans le modifier","Un processus de validation automatique des prompts avant leur exécution"],answer:1},
+  {level:'hard',question:"Qu'est-ce qu'un \"embedding\" (représentation vectorielle) dans le contexte de l'IA ?",options:["L'intégration d'une IA dans un outil existant via une API","La représentation d'un texte, mot ou document sous forme de vecteur numérique, permettant de mesurer la similarité sémantique entre deux textes","Le fait d'incorporer des images dans un prompt textuel pour une analyse multimodale","Un format de compression des modèles pour réduire leur taille de stockage"],answer:1},
+  {level:'hard',question:"Qu'est-ce qu'un \"agent IA\" au sens technique du terme ?",options:["Un commercial spécialisé dans la vente de solutions et licences IA","Un modèle spécialisé sur un domaine précis (médecine, droit, finance…)","Un système capable de prendre des actions autonomes, de percevoir son environnement et d'itérer en boucle jusqu'à atteindre un objectif","Un LLM avec accès permanent à internet en temps réel"],answer:2},
+  {level:'hard',question:"Pourquoi un RLHF trop intensif peut-il rendre un modèle moins utile ?",options:["Le RLHF trop intensif réduit physiquement la taille du modèle et ses capacités","Les évaluateurs humains peuvent inconsciemment privilégier des réponses prudentes et polies, conduisant à des refus excessifs ou de la complaisance","Un RLHF trop intensif augmente paradoxalement le taux d'hallucinations","Il n'existe pas de compromis — plus de RLHF est toujours mieux, sans exception"],answer:1},
+  {level:'hard',question:"Qu'est-ce que le \"grounding\" (ancrage) d'un LLM ?",options:["Le processus d'installation et de déploiement local d'un modèle sur un serveur privé","La connexion du modèle à des sources de données vérifiées et actualisées pour réduire les hallucinations sur des faits","La validation des réponses générées par un second modèle de vérification","Un paramètre qui contrôle la longueur maximale des réponses générées"],answer:1},
+  {level:'hard',question:"Quelle est la différence entre un modèle \"zero-shot\" et \"few-shot\" dans le prompting ?",options:["Zero-shot désigne un modèle moins puissant que few-shot","Zero-shot = le modèle résout la tâche sans exemple dans le prompt ; few-shot = quelques exemples entrée/sortie sont fournis dans le prompt pour guider le comportement","Zero-shot fonctionne sans données d'entraînement ; few-shot nécessite obligatoirement un fine-tuning préalable","Ce sont des termes techniques pour des niveaux de température différents dans les paramètres du modèle"],answer:1},
+  {level:'hard',question:"Quelle est la différence entre un LLM utilisé en mode chat et un LLM utilisé en mode agent ?",options:["Le mode agent utilise un modèle plus puissant que le mode chat","Le mode chat répond à des questions ; le mode agent enchaîne des actions (lecture de fichiers, écriture, exécution de commandes) en boucle autonome pour atteindre un objectif","Le mode agent est plus lent mais plus précis que le mode chat","Il n'y a aucune différence architecturale entre les deux modes"],answer:1},
+  {level:'hard',question:"Pourquoi utiliser le \"Plan Mode\" (mode planification en lecture seule) avant de laisser un agent modifier des fichiers ?",options:["Pour générer une documentation automatique des changements prévus","Pour permettre à l'agent d'analyser le projet en lecture seule et corriger son approche avant d'écrire la moindre ligne","Pour réduire significativement la consommation de tokens sur la session","C'est une obligation réglementaire pour les outils qui modifient des fichiers de production"],answer:1},
+  {level:'hard',question:"Qu'est-ce qu'un \"subagent\" dans le contexte de Claude Code ?",options:["Un utilisateur secondaire avec des droits restreints sur le projet","Un assistant spécialisé que l'agent principal peut lancer pour travailler en parallèle sur une sous-tâche, avec sa propre fenêtre de contexte indépendante","Une version allégée de l'agent pour les tâches simples et rapides","Un plugin tiers qui étend les capacités de l'agent principal"],answer:1},
+  {level:'hard',question:"Quel est l'avantage principal des subagents pour la gestion du contexte ?",options:["Ils permettent de travailler hors connexion sur des parties du projet","Ils réduisent le coût par token en parallélisant les traitements","Chacun disposant de sa propre fenêtre de contexte, le contexte principal reste propre et focalisé sur la tâche principale","Ils accèdent automatiquement à des modèles plus puissants pour leurs sous-tâches"],answer:2},
+  {level:'hard',question:"Qu'est-ce que le fichier CLAUDE.md dans un projet de code géré par un agent ?",options:["La documentation générée automatiquement par l'agent après chaque session de travail","Un fichier de configuration des permissions et limites de l'agent","Un fichier Markdown à la racine du projet que l'agent lit au démarrage pour connaître le stack, les commandes et les conventions du projet","Un log automatique des actions effectuées par l'agent, heure par heure"],answer:2},
+  {level:'hard',question:"Quelle est la différence entre une instruction dans CLAUDE.md et un Hook ?",options:["Les Hooks sont plus lisibles et mieux formatés que les instructions CLAUDE.md","Une instruction CLAUDE.md est une suggestion que l'agent peut oublier dans un long contexte ; un Hook est une règle garantie qui s'exécute toujours à un moment précis du cycle d'exécution","CLAUDE.md s'applique uniquement au projet courant ; les Hooks s'appliquent à tous les projets de l'utilisateur","Il n'y a aucune différence pratique — l'agent respecte les deux de manière identique"],answer:1},
+  {level:'hard',question:"Tu veux que ton agent de code lance automatiquement Prettier après chaque modification de fichier. Quelle est la bonne approche ?",options:["Le mentionner dans CLAUDE.md — l'agent le fera systématiquement à chaque fois","Le rappeler dans chaque prompt de la session","Configurer un Hook (déclencheur automatique) de type PostToolUse qui lance Prettier après chaque édition de fichier","Créer une Skill dédiée à cette règle de formatage"],answer:2},
+  {level:'hard',question:"Quel est le workflow recommandé pour un agent de code pour minimiser les corrections et itérations inutiles ?",options:["Coder directement et tester ensuite — plus rapide au démarrage","Tester d'abord en mode automatique, puis coder en s'appuyant sur les tests","Explorer → Planifier en mode lecture seule → Coder → Committer (valider dans Git)","Générer tout le code en une seule fois puis lancer les tests unitaires"],answer:2},
+  {level:'hard',question:"Pourquoi maintenir une suite de tests unitaires est-il important quand on travaille avec un agent de code ?",options:["Pour documenter automatiquement les actions effectuées par l'agent","Pour donner à l'agent un critère de vérification objectif et fiable qu'il peut exécuter et valider en continu","Pour réduire la consommation de tokens de l'agent sur la session","Pour respecter les obligations légales de traçabilité du code en production"],answer:1},
+  {level:'hard',question:"Ton collègue dit : 'Claude est nul, il m'a donné des statistiques complètement fausses.' Quelle est la vraie cause du problème ?",options:["Il a utilisé le mauvais modèle — Opus aurait donné des chiffres fiables","Claude hallucine systématiquement sur les statistiques — il faut éviter ce type de question","Il a accepté les chiffres sans vérification externe — les données factuelles précises doivent toujours être contrôlées dans des sources primaires","La recherche web n'était pas activée — sans elle, Claude invente les chiffres"],answer:2},
+  {level:'hard',question:"Tu dois préparer un compte-rendu de call client. Quel est le prompt le plus efficace ?",options:["Résume ce call.","Fais-moi un compte-rendu de cette réunion.","Tu es consultant RevOps. Voici la transcription du call. Rédige un CR structuré : contexte client (3 lignes), problèmes identifiés, besoins exprimés, prochaines étapes avec responsables. Format Notion-ready, ton professionnel, 1 bullet point par item.","Voici la transcription. Qu'est-ce qui est important dedans ?"],answer:2},
+  {level:'hard',question:"Tu dois expliquer à un client non-technique pourquoi il ne faut pas utiliser les benchmarks de Claude sans vérification. Quelle formulation est la plus juste ?",options:["Claude est peu fiable sur les données — mieux vaut l'éviter pour toute analyse chiffrée","Claude peut produire des données statistiques plausibles mais inventées — c'est un outil de structure et d'analyse, pas une source de données primaire","Claude est fiable uniquement si on active la recherche web avant de poser la question","Claude est fiable sur les données uniquement avec le modèle le plus puissant"],answer:1},
+  {level:'hard',question:"Tu travailles intensivement sur un même client depuis 3 semaines. Quelle est la meilleure façon d'organiser tes interactions avec Claude ?",options:["Répéter le contexte client dans chaque message de chaque conversation","Configurer un Project dédié à ce client avec les instructions permanentes (rôle, contexte, stack, style attendu)","Coller le contexte uniquement dans le premier message de chaque nouvelle conversation","Créer une Skill dédiée à ce client spécifique"],answer:1},
+  {level:'hard',question:"Tu veux 3 variantes d'un email pour pouvoir choisir. Quelle est la meilleure approche ?",options:["Envoyer le même prompt dans 3 conversations distinctes","Régénérer le même prompt 3 fois dans la même conversation","Demander explicitement dans un seul prompt : 'Propose 3 versions de cet email : une formelle, une directe, une avec un angle storytelling'","Utiliser le modèle le plus puissant qui génère automatiquement des variantes"],answer:2},
+  {level:'hard',question:"Quel est le vrai risque de partager un document client complet avec noms, emails et montants contractuels dans Claude.ai ?",options:["Claude pourrait transmettre ces données à d'autres entreprises concurrentes","Les conversations peuvent par défaut contribuer à l'amélioration des modèles — les données nominatives et confidentielles doivent être anonymisées avant tout partage","Claude refusera automatiquement de traiter des données nominatives réelles","Il n'y a aucun risque si l'abonnement est de niveau Team ou Enterprise"],answer:1},
+  {level:'hard',question:"Tu colles un export CSV de 10 000 lignes dans Claude et les réponses deviennent incohérentes. Quelle est la cause probable ?",options:["Le format CSV n'est pas correctement supporté par Claude","Le fichier est trop volumineux et sature la fenêtre de contexte disponible — les instructions et le début de la conversation sont \"oubliés\"","La connexion MCP à HubSpot n'est pas activée","Claude ne peut analyser que les fichiers de moins de 1 000 lignes"],answer:1},
+  {level:'hard',question:"Parmi ces 4 situations, dans laquelle Deep Research est-il le MOINS adapté ?",options:["Étudier un marché avant un pitch pour un prospect dans un secteur inconnu","Produire un benchmark concurrentiel sur 5 acteurs d'un secteur","Rédiger rapidement une relance email pour un prospect que tu connais déjà","Comprendre un secteur industriel spécifique avant une première mission"],answer:2},
+  {level:'hard',question:"Un consultant utilise Claude pour générer un SOW. Le document contient des clauses contractuelles avec des pourcentages de pénalités très précis. Que doit-il faire ?",options:["Utiliser directement — Claude est entraîné sur des milliers de contrats","Vérifier ces clauses avec un référentiel juridique ou un expert — Claude peut générer des données plausibles mais factuellement incorrectes","Demander à Claude de sourcer chaque clause pour pouvoir la vérifier","Utiliser Opus qui est plus fiable que Sonnet sur les questions juridiques"],answer:1},
+  {level:'hard',question:"Parmi ces 4 prompts pour générer un SOW, lequel est le plus efficace ?",options:["Génère un SOW.","Génère un SOW pour une mission HubSpot.","Tu es consultant RevOps. Génère un SOW pour une mission de migration HubSpot pour une PME SaaS B2B de 80 personnes. Sections : objectifs, périmètre, livrables, jalons, hors-périmètre. Ton direct, format Notion-ready, durée estimée 8 semaines.","Génère le meilleur SOW possible pour notre client, en mode forfait, très complet."],answer:2},
+  {level:'hard',question:"Ta conversation avec Claude dure depuis 1h30. Tu as collé 3 gros fichiers et Claude répète maintenant des informations qu'il avait déjà données 40 messages plus tôt, comme si c'était nouveau. Quelle est la cause et la solution ?",options:["Claude a un bug sur cette session — fermer et rouvrir le navigateur","La fenêtre de contexte est saturée — les informations anciennes ont été écrasées. Solution : redémarrer une nouvelle conversation avec uniquement le contexte essentiel","Claude utilise une version obsolète du modèle — rafraîchir la page pour recharger la dernière version","Le modèle sélectionné n'est pas le bon — passer sur Opus qui a une meilleure mémoire"],answer:1},
 ];
-
-const TOKEN_ROULETTE_QUESTIONS = [
-  { text: "Bonjour !", tokens: 3 },
-  { text: "Qu'est-ce que Claude Code ?", tokens: 8 },
-  { text: "Explique-moi le concept de context window en 3 phrases.", tokens: 14 },
-  { text: "Tu es un assistant IA utile, inoffensif et honnête.", tokens: 13 },
-  { text: "Write a Python function to reverse a string.", tokens: 11 },
-  { text: "Anthropic a fondé Claude pour créer une IA bénéfique et sûre pour l'humanité.", tokens: 20 },
-  { text: "The quick brown fox jumps over the lazy dog.", tokens: 10 },
-  { text: "Quelle est la différence entre Opus, Sonnet et Haiku ?", tokens: 14 },
-  { text: "def fibonacci(n): return n if n <= 1 else fibonacci(n-1) + fibonacci(n-2)", tokens: 22 },
-  { text: "Claude peut analyser des images, des PDFs, traiter du code et répondre en plusieurs langues.", tokens: 22 },
-  { text: "I", tokens: 1 },
-  { text: "Summarize this document in bullet points.", tokens: 8 }
-];
-
-const MISCONCEPTIONS_QUESTIONS = [
-  {
-    statements: [
-      "Claude a une mémoire persistante entre toutes les conversations par défaut",
-      "Claude peut refuser des demandes qu'il juge non éthiques",
-      "Claude est capable de lire et analyser des images",
-      "Claude Opus est plus puissant que Claude Haiku"
-    ],
-    truth: 1, // index 1 est vrai
-    explanation: "Par défaut, Claude n'a PAS de mémoire entre les sessions. Chaque conversation commence de zéro. Les autres affirmations sont vraies."
-  },
-  {
-    statements: [
-      "Le context window de Claude peut aller jusqu'à 200 000 tokens",
-      "Claude peut accéder à Internet en temps réel sans outils",
-      "Claude Code peut exécuter des commandes dans le terminal",
-      "Claude supporte le 'tool use' (function calling)"
-    ],
-    truth: 0,
-    explanation: "Claude ne peut PAS accéder à Internet nativement - il a besoin d'outils externes. Les autres sont vraies."
-  },
-  {
-    statements: [
-      "Anthropic a été fondée en 2021",
-      "Claude peut générer des images nativement",
-      "Claude 4 est la famille de modèles la plus récente",
-      "Constitutional AI est une technique développée par Anthropic"
-    ],
-    truth: 2,
-    explanation: "Claude ne génère PAS d'images nativement. Claude 4 est bien la famille la plus récente. Anthropic a été fondée en 2021 ✓. Constitutional AI ✓."
-  },
-  {
-    statements: [
-      "Le prompt caching réduit les coûts pour les longs contextes répétés",
-      "Claude Haiku est le modèle le plus intelligent de la gamme",
-      "Claude Code peut créer des subagents via le tool Agent",
-      "L'API Claude utilise un format REST/JSON"
-    ],
-    truth: 1,
-    explanation: "Haiku est le plus RAPIDE et économique, pas le plus intelligent. Opus est le plus puissant. Les autres sont vraies."
-  },
-  {
-    statements: [
-      "MCP signifie Model Context Protocol",
-      "Claude peut lire des fichiers PDF joints à la conversation",
-      "Le Batch API permet de traiter des requêtes à coût réduit",
-      "Claude Code ne fonctionne que sur macOS"
-    ],
-    truth: 3,
-    explanation: "Claude Code fonctionne sur macOS, Windows ET Linux (via WSL). Les 3 premières affirmations sont toutes vraies !"
-  },
-  {
-    statements: [
-      "Un token représente approximativement 4 caractères en anglais",
-      "Claude peut coder dans plus de 50 langages de programmation",
-      "Le system prompt est envoyé avant la conversation utilisateur",
-      "Claude Sonnet 4.6 a un context window de 50k tokens"
-    ],
-    truth: 3,
-    explanation: "Sonnet 4.6 a un context window de 200k tokens, pas 50k. Les 3 premières sont vraies."
-  },
-  {
-    statements: [
-      "Claude Code utilise des 'hooks' pour automatiser des actions",
-      "Les Skills dans Claude Code sont invocables par des slash-commands",
-      "Claude peut analyser et modifier du code dans plusieurs fichiers",
-      "Claude ne peut traiter qu'un fichier à la fois"
-    ],
-    truth: 3,
-    explanation: "Claude peut parfaitement traiter et modifier plusieurs fichiers simultanément. Les 3 premières sont vraies."
-  },
-  {
-    statements: [
-      "Anthropic utilise RLHF (Reinforcement Learning from Human Feedback)",
-      "Claude peut s'exprimer en français, espagnol, mandarin et d'autres langues",
-      "Constitutional AI implique que Claude s'auto-critique selon des principes",
-      "Claude Opus coûte moins cher que Haiku à l'utilisation"
-    ],
-    truth: 3,
-    explanation: "Opus est le modèle le plus cher, Haiku le moins cher. Les 3 premières sont vraies."
-  },
-  {
-    statements: [
-      "Le Workflow SDK de Claude Code supporte des boucles et conditions",
-      "pipeline() dans le SDK est plus rapide que parallel() pour du multi-stage",
-      "Les worktrees git permettent aux agents de travailler sans conflits",
-      "Claude peut créer et modifier des fichiers uniquement texte"
-    ],
-    truth: 3,
-    explanation: "Claude peut créer/modifier tout type de fichier (code, images base64, etc.). Les 3 premières sont vraies."
-  },
-  {
-    statements: [
-      "La commande /compact résume le contexte pour libérer la fenêtre",
-      "Claude Code s'intègre avec VS Code et JetBrains",
-      "Les modèles Claude 4 ont été publiés après ceux de la série Claude 3",
-      "Claude ne peut pas appeler d'APIs externes sans code"
-    ],
-    truth: 3,
-    explanation: "Avec tool use / MCP, Claude peut orchestrer des appels à des APIs externes. Les 3 premières sont vraies."
-  }
+  {level:'hard',question:"Quelle est la différence entre 'mémoire' et 'contexte' dans le fonctionnement d'un LLM ?",options:["Ce sont deux termes synonymes dans la littérature technique","La mémoire est persistante entre les sessions (outils externes, base de données) ; le contexte est temporaire et limité à la fenêtre active de la conversation","Le contexte est la mémoire long terme ; la mémoire désigne le contexte court terme","La mémoire s'applique aux données structurées, le contexte aux données textuelles non structurées"],answer:1},
+  {level:'hard',question:"Les tokens de sortie (la réponse générée) sont-ils gratuits par rapport aux tokens d'entrée ?",options:["Oui — seuls les tokens d'entrée comptent dans le coût","Non — les tokens de sortie comptent dans le coût total ET consomment la fenêtre de contexte de la même façon","Les tokens de sortie ne consomment pas la fenêtre de contexte, uniquement le budget financier","Les tokens de sortie sont gratuits sur tous les plans d'abonnement payants"],answer:1},
+  {level:'hard',question:"Pourquoi \"réfléchis étape par étape\" améliore-t-il les performances sur des tâches de logique ?",options:["Elle alloue dynamiquement plus de puissance de calcul serveur à la requête","Elle force la génération de tokens intermédiaires de raisonnement qui servent de mémoire de travail au modèle","Elle active un module de vérification logique interne distinct","Elle réduit automatiquement la température (l'aléatoire) du modèle"],answer:1},
+  {level:'hard',question:"Quelle est la différence entre 'prompt' et 'completion' dans le jargon des API LLM ?",options:["Le prompt est le message système (system prompt) ; la completion est le message utilisateur","Le prompt est l'input total envoyé au modèle (contexte + message) ; la completion est l'output généré en réponse","Ce sont des synonymes parfaits dans toute la documentation officielle d'Anthropic","Le prompt est en texte brut ; la completion est toujours retournée en JSON structuré"],answer:1},
+  {level:'hard',question:"Un modèle fine-tuné sur un domaine précis est-il nécessairement plus fiable qu'un modèle généraliste ?",options:["Oui — le fine-tuning améliore toujours la précision sur le domaine ciblé","Non — si les données de fine-tuning sont de mauvaise qualité ou peu représentatives, le modèle spécialisé peut être moins fiable que le généraliste","Oui, mais uniquement sur des tâches de classification — pas sur des tâches de génération","Non — le fine-tuning n'a aucun impact sur les performances, uniquement sur le style"],answer:1},
+  {level:'hard',question:"Qu'est-ce que le \"few-shot learning\" appliqué au prompting ?",options:["Utiliser un modèle avec peu de paramètres pour des tâches simples","Fournir quelques exemples entrée/sortie dans le prompt pour guider le comportement du modèle sans le fine-tuner","Entraîner un modèle sur un dataset de très petite taille","Réduire le nombre de messages dans la conversation pour économiser les tokens"],answer:1},
+  {level:'hard',question:"Pourquoi un prompt très long n'est-il pas toujours meilleur qu'un prompt court et précis ?",options:["Les modèles ont une limite stricte de caractères en entrée qui bloque les prompts trop longs","Un contexte surchargé dilue l'attention du modèle et peut noyer les instructions importantes dans du bruit","Les prompts longs sont facturés exponentiellement plus chers que les prompts courts","Les modèles ne lisent que les 500 premiers tokens d'un prompt, le reste est ignoré"],answer:1},
+  {level:'hard',question:"Quelle est la différence entre un connecteur MCP 'natif' et un connecteur MCP 'personnalisé' ?",options:["Les connecteurs natifs sont gratuits ; les personnalisés sont facturés à l'usage","Les connecteurs natifs sont des intégrations prêtes à l'emploi (activer en un clic) ; les personnalisés sont construits via un serveur MCP dédié pour un outil non supporté nativement","Les connecteurs natifs fonctionnent en lecture seule ; les personnalisés permettent l'écriture dans les outils","Il n'y a aucune différence fonctionnelle entre les deux types de connecteurs"],answer:1},
+  {level:'hard',question:"Pourquoi travailler avec des données filtrées est-il préférable aux données brutes complètes ?",options:["Les données brutes risquent de corrompre le comportement du modèle","Moins de données non pertinentes = moins de bruit dans le contexte = meilleure concentration du modèle sur ce qui compte réellement","Les données brutes dépassent systématiquement la fenêtre de contexte de n'importe quel modèle","Claude ne peut pas parser des données non filtrées — il nécessite un format structuré au préalable"],answer:1},
+  {level:'hard',question:"Quelle est la vraie limite d'un LLM sur les 'jugements stratégiques' en contexte professionnel ?",options:["Il n'a pas accès aux données financières de l'entreprise sauf via connecteur MCP","Il manque du contexte relationnel implicite, de la responsabilité et du jugement ancré dans la réalité opérationnelle — il peut structurer la réflexion mais pas décider à la place d'un expert","Les LLMs ne sont tout simplement pas entraînés sur des données de business et de stratégie","Il n'y a aucune limite réelle — avec le bon prompt et le bon contexte, un LLM peut tout décider"],answer:1},
+  {level:'hard',question:"Parmi ces 4 affirmations, laquelle est FAUSSE ?",options:["Un LLM peut générer des données chiffrées fausses avec une grande confiance apparente","Donner un rôle précis à Claude améliore la qualité de ses réponses","Une Skill et un Project servent exactement le même usage et sont interchangeables","La fenêtre de contexte inclut à la fois le prompt, l'historique de conversation et la réponse générée"],answer:2},
+  {level:'hard',question:"Parmi ces 4 cas d'usage, lequel est le PLUS approprié pour un LLM ?",options:["Fournir des statistiques sectorielles précises et vérifiées sur l'adoption CRM en PME","Certifier qu'une clause contractuelle est juridiquement valide dans un pays donné","Structurer, rédiger et reformuler un compte-rendu à partir d'une transcription fournie","Calculer un prévisionnel financier détaillé sans aucune donnée historique fournie"],answer:2},
+  {level:'hard',question:"Quelle est la limite principale de la recherche web dans un LLM ?",options:["Elle ne fonctionne qu'en anglais — les requêtes en français ne retournent pas de résultats","Elle est strictement limitée à 10 sources consultables par requête","Le modèle peut synthétiser ou interpréter de manière incorrecte les informations trouvées — une vérification des données critiques reste recommandée","Elle consomme 100 fois plus de tokens qu'une réponse sans recherche"],answer:2},
+  {level:'hard',question:"Parmi ces 4 éléments, lequel N'est PAS un signal que la fenêtre de contexte est saturée ?",options:["Le modèle ignore des instructions données au début de la conversation","Le modèle répète des informations comme si c'était la première fois qu'il les abordait","Les réponses redeviennent génériques alors qu'elles étaient bien calibrées","Le modèle commence à générer ses réponses plus lentement qu'au début de la conversation"],answer:3},
+  {level:'hard',question:"Quel est le principal avantage d'itérer dans une même conversation plutôt que de recommencer à zéro ?",options:["Chaque itération consomme significativement moins de tokens que dans une nouvelle conversation","Claude mémorise les itérations et les réutilise dans les prochaines sessions","L'historique de la conversation constitue un contexte cumulatif que Claude utilise pour mieux calibrer les réponses suivantes","Il n'y a aucun avantage — les deux approches sont strictement équivalentes"],answer:2},
+  {level:'hard',question:"Quelle affirmation sur le fine-tuning vs le prompting est la plus juste ?",options:["Le fine-tuning est toujours meilleur que le prompting pour des tâches spécifiques, sans exception","Le prompting avancé (avec Skills, exemples, contexte riche) est souvent suffisant et plus flexible ; le fine-tuning est pertinent pour des cas très spécifiques à fort volume","Le prompting ne peut jamais atteindre la précision d'un modèle fine-tuné sur le même domaine","Le fine-tuning et le prompting sont incompatibles — il faut impérativement choisir l'une ou l'autre approche"],answer:1},
+  {level:'hard',question:"Parmi ces 4 usages, lequel tire le MOINS parti des capacités réelles d'un LLM ?",options:["Synthétiser 50 pages de notes de calls en un résumé structuré par thème","Générer 10 variantes d'un même email pour tester différents angles","Stocker des informations confidentielles pour les retrouver plus tard dans d'autres conversations","Analyser les points communs et divergences entre 20 feedbacks clients"],answer:2},
+  {level:'hard',question:"Pourquoi spécifier un format de sortie dans son prompt améliore-t-il le résultat ?",options:["Sans format spécifié, Claude refuse de répondre et demande une précision","Le format par défaut de Claude est souvent trop long et générique par rapport au besoin réel","La spécification du format réduit la consommation de tokens en entrée","Sans format spécifié, Claude utilise automatiquement un modèle plus puissant"],answer:1},
+  {level:'hard',question:"Quelle est la vraie différence entre Deep Research et une recherche web classique ?",options:["Deep Research utilise un modèle différent et plus puissant (Opus)","La recherche web retourne des liens ; Deep Research effectue plusieurs requêtes itératives, synthétise les sources et produit un rapport structuré avec citations","Deep Research fonctionne uniquement en anglais, la recherche web supporte toutes les langues","La recherche web est incluse dans tous les abonnements ; Deep Research est une option payante en supplément"],answer:1},
+  {level:'hard',question:"Parmi ces 4 affirmations sur les hallucinations, laquelle est correcte ?",options:["Les hallucinations ne concernent que les statistiques et les chiffres — jamais le texte descriptif","Les hallucinations peuvent être complètement éliminées avec un prompt suffisamment précis et détaillé","Les hallucinations sont plus fréquentes sur des sujets rares, des données très précises ou des requêtes trop spécifiques","Les hallucinations sont toujours visibles — le modèle signale systématiquement quand il n'est pas certain"],answer:2},
+  {level:'hard',question:"Qu'est-ce que le 'attention mechanism' (mécanisme d'attention) dans l'architecture transformer ?",options:["Un module qui filtre automatiquement les contenus inappropriés avant génération","Un mécanisme permettant au modèle de pondérer l'importance relative de chaque partie du contexte lors de la génération de chaque token","Un système d'alerte qui détecte les questions ambiguës et demande une clarification","Un paramètre qui contrôle la taille de la fenêtre de contexte maximale du modèle"],answer:1},
+  {level:'hard',question:"Pourquoi les LLMs tendent-ils à être 'sycophantiques' (à approuver l'utilisateur même quand il a tort) ?",options:["C'est un choix délibéré de design pour améliorer la satisfaction utilisateur mesurée dans les enquêtes","Le RLHF peut entraîner le modèle à produire des réponses qui plaisent aux évaluateurs humains plutôt que des réponses vraies et utiles","Les LLMs n'ont pas de capacité à évaluer la vérité — ils ne font qu'imiter les patterns des données","C'est un bug connu qui sera corrigé dans les prochaines versions des modèles"],answer:1},
+  {level:'hard',question:"Qu'est-ce que le 'context stuffing' et pourquoi est-ce contre-productif ?",options:["Fournir trop d'instructions structurées et numérotées dans le prompt","Remplir la fenêtre de contexte avec de grandes quantités de données largement non pertinentes, ce qui noie les instructions importantes et dégrade la qualité","Répéter plusieurs fois la même instruction dans le prompt pour la renforcer","Inclure des exemples de mauvaises réponses pour guider le modèle par contraste"],answer:1},
+  {level:'hard',question:"Quelle est la différence entre un modèle 'instruct' et un modèle 'base' ?",options:["Le modèle instruct a toujours plus de paramètres que le modèle base","Le modèle base est le résultat brut du pré-entraînement (complétion de texte pure) ; le modèle instruct a été aligné via RLHF pour suivre des instructions et être utile","Le modèle instruct fonctionne uniquement en mode agent ; le modèle base est utilisé en mode chat","Le modèle base est open source ; le modèle instruct est toujours propriétaire"],answer:1},
+  {level:'hard',question:"Qu'est-ce que l'\"alignment\" (alignement) dans le développement de LLMs ?",options:["L'optimisation du modèle pour performer dans une langue ou un domaine spécifique","Le processus visant à faire en sorte que le comportement d'un LLM soit conforme aux valeurs, intentions et besoins humains","La synchronisation des poids (paramètres) entre plusieurs serveurs d'inférence","L'adaptation d'un modèle généraliste à un domaine spécifique via fine-tuning"],answer:1},
+  {level:'hard',question:"Qu'est-ce qu'un 'EOS token' (token de fin de séquence) ?",options:["Le dernier token visible dans la réponse affichée à l'utilisateur","Un signal spécial généré par le modèle pour indiquer qu'il a terminé de produire sa réponse","Le token utilisé pour séparer le system prompt du message utilisateur","Un token de sécurité interne qui filtre les contenus inappropriés avant affichage"],answer:1},
+  {level:'hard',question:"Pourquoi les LLMs peuvent-ils 'raisonner' sur des sujets qu'ils n'ont pas explicitement vus dans leurs données d'entraînement ?",options:["Ils accèdent à une base de connaissances externe mise à jour en temps réel","La généralisation émergente des patterns linguistiques et conceptuels permet d'appliquer des structures de raisonnement à de nouveaux domaines","Les ingénieurs programment des règles de raisonnement explicites en complément du pré-entraînement","Ce n'est pas possible — un LLM ne peut raisonner que sur des situations identiques à celles vues en entraînement"],answer:1},
+  {level:'hard',question:"Quelle est la différence entre 'precision' et 'recall' dans l'évaluation d'un modèle de classification IA ?",options:["Precision = vitesse du modèle ; Recall = sa capacité à mémoriser les exemples d'entraînement","Precision = proportion de vrais positifs parmi les éléments prédits positifs ; Recall = proportion de vrais positifs parmi tous les positifs réels","Ce sont des métriques uniquement applicables aux LLMs de grande taille","Precision mesure la qualité des réponses ; Recall mesure leur exhaustivité par rapport à un corpus de référence"],answer:1},
+  {level:'hard',question:"Qu'est-ce que le 'stochastic parroting' — une critique académique des LLMs ?",options:["La tendance des LLMs à répéter mécaniquement les questions de l'utilisateur","La critique selon laquelle les LLMs reproduisent des patterns statistiques sans compréhension réelle, amplifiant potentiellement les biais présents dans les données d'entraînement","Un bug technique qui fait boucler le modèle sur la même phrase indéfiniment","La capacité des LLMs à imiter précisément le style d'auteurs spécifiques sur demande"],answer:1},
+  {level:'hard',question:"Quelle est la différence pratique entre 'zero-shot', 'one-shot' et 'few-shot' dans les capacités d'un LLM ?",options:["Ce sont des niveaux de puissance du modèle : 0%, 50% et 100% des paramètres actifs","Zero = aucun exemple fourni dans le prompt ; one = un exemple ; few = quelques exemples — la qualité augmente généralement avec les exemples","Des niveaux de confiance affichés dans les réponses générées par le modèle","Des modes d'entraînement : zéro donnée, peu de données, beaucoup de données"],answer:1},
+  {level:'hard',question:"Ton collègue dit : 'On devrait toujours prompter Claude en anglais pour avoir de meilleures réponses.' Es-tu d'accord ?",options:["Oui — la différence de performance justifie l'effort de traduire tous ses prompts en anglais","Non — pour les usages courants (rédaction, analyse, synthèse professionnelle), la différence est négligeable et le contexte naturellement en français est souvent plus précis","Oui, mais uniquement pour les tâches analytiques complexes — pas pour la rédaction","Non — les LLMs modernes sont parfaitement équilibrés entre toutes les langues sans aucune différence"],answer:1},
+  {level:'hard',question:"Quelle est la meilleure description du rôle d'un LLM dans un workflow professionnel ?",options:["Un remplaçant progressif des collaborateurs humains sur toutes les tâches documentaires et analytiques","Un outil d'amplification qui accélère et structure le travail humain, sans se substituer au jugement contextuel et à l'expertise","Une source d'information fiable qui peut remplacer la recherche documentaire classique","Un outil autonome capable de prendre des décisions stratégiques avec le bon contexte et le bon modèle"],answer:1},
+  {level:'hard',question:"Pourquoi des exemples réels sont-ils plus efficaces que des exemples fictifs dans un prompt ?",options:["Claude ne comprend pas les exemples fictifs — il les ignore automatiquement","Les exemples réels contiennent des nuances implicites de style, de niveau et de contraintes que les exemples construits de toutes pièces ne capturent pas aussi fidèlement","Les exemples réels réduisent la consommation de tokens par rapport aux exemples fictifs","Les exemples fictifs biaisent systématiquement le modèle vers des réponses génériques"],answer:1},
+  {level:'hard',question:"Quelle est la meilleure façon d'utiliser Claude sur un problème que tu maîtrises bien toi-même ?",options:["Lui laisser produire la solution complète et l'adopter telle quelle — il est plus rapide","Ne pas l'utiliser — Claude est inutile sur les sujets que tu maîtrises mieux que lui","Lui soumettre ton brouillon ou ton raisonnement pour affiner la structure, raccourcir et améliorer la lisibilité sans dénaturer le fond","L'utiliser uniquement pour la traduction et la mise en forme finale du livrable"],answer:2},
+  {level:'hard',question:"Un LLM peut-il 'apprendre' de tes corrections pendant une conversation ?",options:["Oui — il met à jour ses poids (paramètres internes) en temps réel à partir de tes retours","Oui — les corrections sont sauvegardées dans sa mémoire pour la prochaine session","Non au sens strict — mais dans la conversation active, les corrections enrichissent le contexte visible et influencent toutes les réponses suivantes","Non — chaque message est traité en isolation complète, sans mémoire des messages précédents"],answer:2},
+  {level:'hard',question:"Quelle est la vraie valeur d'une Skill bien conçue utilisée pendant plusieurs semaines ?",options:["Économiser le coût des tokens sur chaque requête individuelle","Permettre à un modèle généraliste d'agir comme un expert de ton domaine à chaque invocation, sans réexpliquer les règles métier et les formats attendus","Accélérer le temps de réponse de Claude en réduisant le traitement du contexte","Partager tes meilleures pratiques avec l'équipe Anthropic pour améliorer le modèle"],answer:1},
+  {level:'hard',question:"Pourquoi la qualité d'un output LLM dépend-elle autant de la qualité de l'input ?",options:["Les LLMs font une analyse de sentiment de l'input pour calibrer leur niveau d'effort","Le modèle optimise la plausibilité par rapport au contexte fourni — un contexte vague génère quelque chose de plausible dans le vide, pas nécessairement utile","Les LLMs sont programmés pour rejeter et signaler les inputs insuffisamment précis","C'est un problème d'interface utilisateur, pas d'architecture fondamentale du modèle"],answer:1},
+  {level:'hard',question:"Quelle est la différence entre 'reliable' (fiable/cohérent) et 'accurate' (exact/correct) pour évaluer un LLM ?",options:["Ce sont des synonymes exacts dans le contexte de l'évaluation des modèles IA","Reliable = cohérent et reproductible dans ses réponses ; Accurate = factuellement correct — un LLM peut être l'un sans l'autre","Reliable s'applique aux modèles ; Accurate s'applique exclusivement aux données d'entraînement","Ces termes d'évaluation ne s'appliquent pas aux LLMs — ils viennent du ML (machine learning) classique de classification"],answer:1},
+  {level:'hard',question:"Pourquoi les interfaces IA modernes proposent-elles des 'styles' d'écriture personnalisables ?",options:["Pour différencier les offres d'abonnement payantes des offres gratuites","Pour permettre au modèle de reproduire un ton et un registre spécifiques sans avoir à les redécrire dans chaque prompt","Pour compenser les différences de qualité entre les langues prises en charge","Pour réduire la consommation de tokens à long terme sur les sessions fréquentes"],answer:1},
+  {level:'hard',question:"Qu'est-ce qu'une 'hallucination confidentielle' — un risque spécifique des LLMs en contexte professionnel ?",options:["La génération de données non conformes au RGPD (règlement général sur la protection des données)","Le modèle qui invente des détails plausibles (clauses contractuelles, noms, chiffres précis) dans un livrable sans aucun signal d'erreur, rendant la vérification indispensable","La fuite de données confidentielles vers d'autres utilisateurs de la même plateforme","La répétition dans la réponse de données sensibles que tu as toi-même fournies dans le prompt"],answer:1},
+  {level:'hard',question:"Quelle est la meilleure définition d'un 'bon prompt' ?",options:["Le prompt le plus long et le plus détaillé possible — plus de contexte est toujours mieux","Le prompt le plus court possible — un modèle puissant doit comprendre sans effort","Le prompt dense en information pertinente, avec rôle, contexte, tâche et format — ni trop vague, ni surchargé de bruit","Le prompt rédigé en anglais, quelle que soit la langue de travail de l'utilisateur"],answer:2},
+  {level:'hard',question:"Quel est le vrai risque d'une Skill 'trop longue' dépassant les recommandations de taille ?",options:["Elle sera automatiquement rejetée par l'interface avec un message d'erreur","Elle sera facturée exponentiellement plus cher en tokens à chaque appel","La qualité de chargement se dégrade et les règles peuvent se neutraliser entre elles — une Skill bien conçue reste focalisée sur une seule tâche précise","Elle ne pourra plus être partagée avec les membres de l'organisation"],answer:2},
+  {level:'hard',question:"Pourquoi vaut-il mieux redémarrer une conversation plutôt que d'y accumuler un très long historique ?",options:["Pour des raisons de confidentialité — les longues conversations sont techniquement moins sécurisées","Parce que chaque nouveau message traite l'intégralité de l'historique — un contexte saturé dilue les instructions et fait 'oublier' les plus anciennes","Pour économiser le quota hebdomadaire de tokens de son abonnement","Claude génère systématiquement des réponses plus créatives et précises sur des conversations fraîches"],answer:1},
+  {level:'hard',question:"Quelle est la meilleure analogie pour expliquer ce qu'est un LLM à quelqu'un sans background technique ?",options:["C'est comme Google, mais qui répond avec des phrases complètes au lieu de liens","C'est une intelligence artificielle qui pense et comprend comme un être humain","C'est un système qui, à partir de l'immense quantité de texte sur lequel il a été entraîné, prédit le texte le plus probable et utile en réponse à ce qu'on lui écrit","C'est une base de données de millions de réponses organisées par sujet et par contexte"],answer:2},
+  {level:'hard',question:"Quelle est LA compétence la plus impactante pour tirer parti d'un LLM au quotidien ?",options:["Connaître précisément les différences techniques entre tous les modèles disponibles","Savoir construire et itérer sur des prompts précis — avec le bon contexte, la bonne tâche, le bon format et des exemples concrets","Maîtriser l'API (interface de programmation) pour automatiser tous les workflows manuels","Créer des Skills réutilisables pour chaque tâche récurrente sans exception"],answer:1},
 ];
