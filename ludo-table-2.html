@@ -629,21 +629,18 @@ async function joinSubmit() {
       if ((count||0) >= MAX_PLAYERS) { if(errEl) errEl.textContent='Table complète.'; nameEl.disabled=false; return; }
       session = existing;
     } else {
-      // Create new session — only close an existing waiting session if it has NO active recent players.
-      // If it has active players, redirect to join mode instead of evicting them.
+      // Always allow creating a new session — players choose freely which table/session to join.
+      // Only clean up ghost sessions (waiting sessions with zero active recent players).
       const thr = new Date(Date.now()-STALE_MS).toISOString();
-      const {data:existing} = await sb.from('game_sessions').select('id')
-        .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting')
-        .order('created_at',{ascending:false}).limit(1).single();
-      if (existing) {
-        const {count:activeCount} = await sb.from('players').select('*',{count:'exact',head:true})
-          .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',thr);
-        if ((activeCount||0) > 0) {
-          if(errEl){ errEl.innerHTML='Une partie est déjà ouverte sur cette table.'; const b=document.createElement('button');b.className='btn btn-primary';b.style='margin-top:10px;width:100%;padding:11px';b.textContent='→ Rejoindre la partie en cours';b.onclick=()=>{_joinMode='join';renderJoinStep('name');};errEl.appendChild(b); };
-          nameEl.disabled = false; return;
+      const {data:ghosts} = await sb.from('game_sessions').select('id')
+        .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting');
+      for (const g of (ghosts||[])) {
+        const {count:ac} = await sb.from('players').select('*',{count:'exact',head:true})
+          .eq('session_id',g.id).eq('is_active',true).gte('last_seen',thr);
+        if (!(ac||0)) {
+          await sb.from('players').update({is_active:false}).eq('session_id',g.id).eq('is_active',true);
+          await sb.from('game_sessions').update({status:'finished'}).eq('id',g.id);
         }
-        await sb.from('players').update({is_active:false}).eq('session_id',existing.id).eq('is_active',true);
-        await sb.from('game_sessions').update({status:'finished'}).eq('id',existing.id);
       }
       const {data:ns,error:nsErr} = await sb.from('game_sessions').insert({
         game_type:'ludo',table_id:TABLE_ID,status:'waiting',
