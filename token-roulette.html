@@ -271,7 +271,7 @@ function startRevealCountdown() {
   revealTimer = setInterval(() => {
     t--;
     document.getElementById('trCountdown').textContent = t;
-    if (t <= 0) { clearRevealTimer(); if (isHost()) nextRound(); }
+    if (t <= 0) { clearRevealTimer(); nextRound(); }
   }, 1000);
 }
 function clearRevealTimer() { if (revealTimer) { clearInterval(revealTimer); revealTimer = null; } }
@@ -622,11 +622,17 @@ function showRevealOverlay(gd) {
   startRevealCountdown();
 }
 
+let _advancingRound = null;
 async function nextRound() {
   clearRevealTimer();
   document.getElementById('revealOverlay').classList.remove('show');
   const sess = state.session;
-  const nextR = (sess.current_round || 1) + 1;
+  const fromRound = sess.current_round || 1;
+  // Guard: any client may trigger this (resilient if host is stale/offline),
+  // but only advance once per round.
+  if (_advancingRound === fromRound) return;
+  _advancingRound = fromRound;
+  const nextR = fromRound + 1;
 
   if (nextR > 10 || sess.current_question_index + 1 >= TOKEN_ROULETTE_QUESTIONS.length) {
     await finishGame();
@@ -637,7 +643,7 @@ async function nextRound() {
     current_round: nextR,
     current_question_index: sess.current_question_index + 1,
     current_player_id: active[0].id,
-    game_data: { ...sess.game_data, round_estimates: {} }
+    game_data: { ...sess.game_data, round_estimates: {}, scored_round: sess.game_data?.scored_round }
   }).eq('id', state.session.id);
 }
 
