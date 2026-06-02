@@ -538,7 +538,7 @@ function renderJoinStep(step, extra) {
     const title = _joinMode === 'create' ? `Créer une partie — Table ${tableNum}` : `Rejoindre — Table ${tableNum}`;
     const btn   = _joinMode === 'create' ? 'Créer la partie →' : 'Rejoindre →';
     m.innerHTML = `
-      <button onclick="renderJoinStep(_joinMode==='create'?'choose':'list')" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.85rem;margin-bottom:14px;padding:0">← Retour</button>
+      <button onclick="(new URLSearchParams(location.search).has('join'))?location.href='index.html':renderJoinStep(_joinMode==='create'?'choose':'list')" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.85rem;margin-bottom:14px;padding:0">← Retour</button>
       <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:16px">${title}</h3>
       <div class="input-group" style="margin-bottom:10px">
         <label>Votre nom</label>
@@ -624,12 +624,17 @@ async function joinSubmit() {
       const {data:existing} = await sb.from('game_sessions').select('*')
         .eq('table_id',TABLE_ID).eq('game_type','ludo').eq('status','waiting')
         .order('created_at',{ascending:false}).limit(1).single();
-      if (!existing) { if(errEl) errEl.textContent='Aucune session en attente sur cette table.'; nameEl.disabled=false; return; }
-      const {count} = await sb.from('players').select('*',{count:'exact',head:true})
-        .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',thr);
-      if ((count||0) >= MAX_PLAYERS) { if(errEl) errEl.textContent='Table complète.'; nameEl.disabled=false; return; }
-      session = existing;
-    } else {
+      if (!existing) {
+        // No waiting session → auto-create one (player becomes host)
+        _joinMode = 'create';
+      } else {
+        const {count} = await sb.from('players').select('*',{count:'exact',head:true})
+          .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',thr);
+        if ((count||0) >= MAX_PLAYERS) { if(errEl) errEl.textContent='Table complète.'; nameEl.disabled=false; return; }
+        session = existing;
+      }
+    }
+    if (_joinMode === 'create') {
       // Always allow creating a new session — players choose freely which table/session to join.
       // Only clean up ghost sessions (waiting sessions with zero active recent players).
       const thr = new Date(Date.now()-STALE_MS).toISOString();
