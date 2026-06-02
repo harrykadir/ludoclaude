@@ -196,7 +196,7 @@ header {
 
       <!-- All estimates this round -->
       <div class="panel" id="estimatesPanel" style="display:none">
-        <div class="panel-title">Estimations du round</div>
+        <div class="panel-title">Qui a estimé ?</div>
         <div class="estimates-grid" id="estimatesList"></div>
       </div>
     </div>
@@ -382,6 +382,7 @@ function renderAll() {
   renderCurrentQuestion();
   renderEstimates();
   updateRoundDisplay();
+  maybeReveal();
 }
 
 function renderPlayers() {
@@ -461,22 +462,18 @@ function renderEstimates() {
   }
   document.getElementById('estimateStatus').textContent = statusText;
 
-  if (entries.length > 0) {
+  // Anti-cheat: show ONLY who has already estimated (never the values) during the round
+  if (sess.status === 'playing') {
     document.getElementById('estimatesPanel').style.display = 'block';
-    const idx = sess.current_question_index;
-    const correctTokens = TOKEN_ROULETTE_QUESTIONS[idx]?.tokens;
-    const sorted = entries.map(([id, val]) => {
-      const p = state.players.find(x => x.id === id);
-      const diff = correctTokens ? Math.abs(val - correctTokens) : null;
-      return { name: p?.name || '?', color: p?.color || '#fff', val, diff };
-    }).sort((a,b) => (a.diff||999) - (b.diff||999));
-
-    document.getElementById('estimatesList').innerHTML = sorted.map((e, i) => `
-      <div class="estimate-card ${i===0?'best':''}">
-        <div class="estimate-name">${e.name}</div>
-        <div class="estimate-val" style="color:${e.color}">${e.val}</div>
-        ${e.diff !== null ? `<div class="estimate-diff">± ${e.diff} tokens</div>` : ''}
-      </div>`).join('');
+    document.getElementById('estimatesList').innerHTML = state.players.filter(p=>p.is_active).map(p => {
+      const done = roundEsts[p.id] !== undefined;
+      return `
+      <div class="estimate-card ${done?'best':''}">
+        <div class="estimate-name" style="color:${p.color}">${p.name}</div>
+        <div class="estimate-val" style="font-size:1.5rem">${done?'✅':'⏳'}</div>
+        <div class="estimate-diff">${done?'a estimé':'en attente'}</div>
+      </div>`;
+    }).join('');
   } else {
     document.getElementById('estimatesPanel').style.display = 'none';
   }
@@ -544,43 +541,73 @@ async function submitEstimate() {
     }
     await sb.from('game_sessions').update({ game_data: gd, current_player_id: active[nextIdx].id }).eq('id', state.session.id);
   } else {
-    // All submitted — only the first player who submitted can trigger reveal
-    // (we use current_player_id === myPlayer to gate reveal)
+    // All submitted — just persist. Reveal is state-driven via renderAll()/maybeReveal()
+    // on every client (scoring is applied once by the host).
     await sb.from('game_sessions').update({ game_data: gd }).eq('id', state.session.id);
-    setTimeout(() => revealAnswers(gd), 500);
+    await loadGameState();
   }
 }
 
-async function revealAnswers(gd) {
-  const sess = state.session;
-  const idx = sess.current_question_index;
-  const q = TOKEN_ROULETTE_QUESTIONS[idx];
-  const correctTokens = q.tokens;
+function trPoints(diff) {
+  if (diff === 0) return 10;
+  if (diff <= 1) return 8;
+  if (diff <= 2) return 6;
+  if (diff <= 5) return 4;
+  if (diff <= 10) return 2;
+  return 0;
+}
 
-  // Calculate scores
+// Called from renderAll() on every client. Display is state-driven; scoring is host-only & once per round.
+let _shownRevealRound = null;
+let _scoringRound = null;
+function maybeReveal() {
+  const sess = state.session;
+  if (!sess || sess.status !== 'playing') return;
+  const gd = sess.game_data || {};
   const active = state.players.filter(p=>p.is_active);
-  const estimates = gd.round_estimates || {};
-  const scored = active.map(p => {
-    const est = estimates[p.id] || 0;
-    const diff = Math.abs(est - correctTokens);
-    let pts = 0;
-    if (diff === 0) pts = 10;
-    else if (diff <= 1) pts = 8;
-    else if (diff <= 2) pts = 6;
-    else if (diff <= 5) pts = 4;
-    else if (diff <= 10) pts = 2;
-    else pts = 0;
-    return { ...p, est, diff, pts };
+  if (!active.length) return;
+  const allSub = active.every(p => gd.round_estimates?.[p.id] !== undefined);
+  if (!allSub) return;
+
+  // Host applies scores exactly once per round
+  if (isHost() && gd.scored_round !== sess.current_round && _scoringRound !== sess.current_round) {
+    _scoringRound = sess.current_round;
+    hostApplyScores(gd);
+  }
+  // Every client shows the reveal overlay once per round
+  if (_shownRevealRound !== sess.current_round) {
+    _shownRevealRound = sess.current_round;
+    showRevealOverlay(gd);
+  }
+}
+
+async function hostApplyScores(gd) {
+  const sess = state.session;
+  const q = TOKEN_ROULETTE_QUESTIONS[sess.current_question_index];
+  const correct = q.tokens;
+  const ests = gd.round_estimates || {};
+  for (const p of state.players.filter(p=>p.is_active)) {
+    const est = ests[p.id] || 0;
+    const pts = trPoints(Math.abs(est - correct));
+    await sb.from('players').update({ score: p.score + pts }).eq('id', p.id);
+  }
+  // Mark this round as scored so no client double-counts
+  await sb.from('game_sessions').update({ game_data: { ...gd, scored_round: sess.current_round } }).eq('id', sess.id);
+}
+
+function showRevealOverlay(gd) {
+  const sess = state.session;
+  const q = TOKEN_ROULETTE_QUESTIONS[sess.current_question_index];
+  const correct = q.tokens;
+  const ests = gd.round_estimates || {};
+  const scored = state.players.filter(p=>p.is_active).map(p => {
+    const est = ests[p.id] || 0;
+    const diff = Math.abs(est - correct);
+    return { ...p, est, diff, pts: trPoints(diff) };
   }).sort((a,b) => a.diff - b.diff);
 
-  // Update scores
-  for (const p of scored) {
-    await sb.from('players').update({ score: p.score + p.pts }).eq('id', p.id);
-  }
-
-  // Show reveal overlay
   document.getElementById('revealText').textContent = `La réponse était...`;
-  document.getElementById('revealAnswer').textContent = `${correctTokens} tokens`;
+  document.getElementById('revealAnswer').textContent = `${correct} tokens`;
   document.getElementById('revealSubtitle').textContent = `"${q.text}"`;
   document.getElementById('revealEstimates').innerHTML = scored.map((p,i) => `
     <div class="estimate-card ${i===0?'best':''}">
@@ -592,7 +619,6 @@ async function revealAnswers(gd) {
 
   document.getElementById('revealNextBtn').style.display = isHost() ? 'inline-block' : 'none';
   document.getElementById('revealOverlay').classList.add('show');
-  await loadGameState();
   startRevealCountdown();
 }
 
@@ -652,13 +678,7 @@ function subscribeRealtime() {
         document.getElementById('revealOverlay').classList.remove('show');
       }
       state.session = payload.new;
-      // Check if all estimates submitted by others
-      const gd = payload.new.game_data || {};
-      const active = state.players.filter(p=>p.is_active);
-      const allSub = active.every(p => gd.round_estimates?.[p.id] !== undefined);
-      if (allSub && payload.new.status === 'playing' && state.myPlayer?.turn_order !== 0) {
-        setTimeout(() => revealAnswers(gd), 500);
-      }
+      // Reveal is handled by renderAll()/maybeReveal() below (state-driven, all clients)
       if (payload.new.status === 'finished' && payload.new.game_data?.winner) {
         document.getElementById('winnerName').textContent = payload.new.game_data.winner;
         document.getElementById('gameOverOverlay').classList.add('show');
