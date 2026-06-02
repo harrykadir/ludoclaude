@@ -115,77 +115,189 @@
     font-size: 0.78rem;
     font-weight: 500;
   }
-  .ludo-tables {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px 40px;
-  }
-  .tables-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
-  }
-  .table-card {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 20px 16px;
-    text-align: center;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.3s ease;
-    display: block;
-  }
-  .table-card:hover {
-    background: rgba(102, 126, 234, 0.2);
-    border-color: #667eea;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(102,126,234,0.3);
-  }
-  .table-number {
-    font-size: 2rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .table-label {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.5);
-    margin-top: 4px;
-  }
-  .table-players {
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.35);
-    margin-top: 8px;
-  }
-  .players-dot {
-    display: inline-block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #2ecc71;
-    margin-right: 4px;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
   .footer {
     text-align: center;
     padding: 32px;
     color: rgba(255,255,255,0.3);
     font-size: 0.85rem;
     border-top: 1px solid rgba(255,255,255,0.08);
+    margin-top: 20px;
   }
-  @media (max-width: 768px) {
-    .tables-grid { grid-template-columns: repeat(3, 1fr); }
-    .logo { font-size: 2.5rem; }
+
+  /* ── Lobby overlay ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(10px);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
   }
+  .overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .lobby-modal {
+    background: linear-gradient(135deg, #1a1a3e, #2d1b69);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 24px;
+    padding: 32px;
+    max-width: 680px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.92);
+    transition: transform 0.3s;
+  }
+  .overlay.show .lobby-modal { transform: scale(1); }
+
+  .lobby-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .lobby-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+  .lobby-close {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .lobby-close:hover { background: rgba(255,255,255,0.16); }
+
+  .lobby-subtitle {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 24px;
+  }
+
+  .tables-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .table-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.2s;
+  }
+  .table-row:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .table-row.full {
+    opacity: 0.5;
+  }
+  .table-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .table-num {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    min-width: 28px;
+  }
+  .table-name {
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .table-count {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.45);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .dot-live {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pips {
+    display: flex;
+    gap: 4px;
+    margin-top: 5px;
+  }
+  .pip {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: background 0.3s;
+  }
+  .pip.filled {
+    background: #667eea;
+    border-color: #764ba2;
+    box-shadow: 0 0 6px rgba(102,126,234,0.6);
+  }
+  .btn-join {
+    padding: 9px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-join:hover:not(:disabled) {
+    opacity: 0.85;
+    transform: translateY(-1px);
+  }
+  .btn-join:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .lobby-loading {
+    text-align: center;
+    padding: 32px;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.9rem;
+  }
+  .lobby-refresh {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.3);
+  }
+
   @media (max-width: 480px) {
-    .tables-grid { grid-template-columns: repeat(2, 1fr); }
     .games-grid { grid-template-columns: 1fr; }
+    .lobby-modal { padding: 20px; }
+    .table-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .btn-join { width: 100%; text-align: center; }
   }
 </style>
 </head>
@@ -199,14 +311,14 @@
 
 <p class="section-title">Jeux disponibles</p>
 <div class="games-grid">
-  <div class="game-card" style="--accent: linear-gradient(135deg,#667eea,#764ba2)" onclick="location.href='ludo-table-1.html'">
+  <div class="game-card" style="--accent: linear-gradient(135deg,#667eea,#764ba2)" onclick="openLobby()">
     <span class="card-icon">🎲</span>
     <div class="card-title">Ludo Claude</div>
-    <p class="card-desc">Plateau circulaire 6 joueurs, questions sur Claude, répondez correctement pour avancer vos pions. Tirage au sort pour l'ordre de jeu. 5 tables disponibles.</p>
+    <p class="card-desc">Plateau circulaire jusqu'à 6 joueurs, questions sur Claude, répondez correctement pour avancer vos pions. 10 tables disponibles.</p>
     <div class="card-tags">
       <span class="tag">2–6 joueurs</span>
       <span class="tag">60 cases</span>
-      <span class="tag">30 questions</span>
+      <span class="tag">150 questions</span>
     </div>
   </div>
   <a href="token-roulette.html" class="game-card" style="--accent: linear-gradient(135deg,#f093fb,#f5576c)">
@@ -231,65 +343,127 @@
   </a>
 </div>
 
-<p class="section-title">Tables Ludo</p>
-<div class="ludo-tables">
-  <div class="tables-grid" id="tablesGrid">
-    <!-- Generated by JS -->
-  </div>
-</div>
-
 <div class="footer">
   LudoClaude · Session Live Claude · Temps réel via Supabase
+</div>
+
+<!-- ── Ludo Lobby overlay ── -->
+<div class="overlay" id="lobbyOverlay" onclick="overlayClick(event)">
+  <div class="lobby-modal">
+    <div class="lobby-header">
+      <div class="lobby-title">🎲 Choisir une table</div>
+      <button class="lobby-close" onclick="closeLobby()">✕</button>
+    </div>
+    <p class="lobby-subtitle">Rejoignez une table avec de la place disponible. La table se lance quand le créateur démarre la partie.</p>
+    <div class="tables-list" id="tablesList">
+      <div class="lobby-loading">Chargement des tables…</div>
+    </div>
+    <div class="lobby-refresh" id="lobbyRefreshInfo"></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script>
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const MAX_PLAYERS = 6;
+const N_TABLES = 10;
+const STALE_MS = 600000;
 
-async function loadTablePlayers() {
-  const grid = document.getElementById('tablesGrid');
-  const counts = {};
+let _lobbyInterval = null;
 
-  try {
-    const { data: sessions } = await supabase
-      .from('game_sessions')
-      .select('table_id, id')
-      .eq('game_type', 'ludo')
-      .eq('status', 'playing');
-
-    if (sessions) {
-      for (const s of sessions) {
-        const { count } = await supabase
-          .from('players')
-          .select('*', { count: 'exact', head: true })
-          .eq('session_id', s.id)
-          .eq('is_active', true);
-        counts[s.table_id] = count || 0;
-      }
-    }
-  } catch (e) { /* silently fail */ }
-
-  grid.innerHTML = '';
-  for (let i = 1; i <= 5; i++) {
-    const tableId = `ludo-table-${i}`;
-    const playerCount = counts[tableId] || 0;
-    const card = document.createElement('a');
-    card.href = `ludo-table-${i}.html`;
-    card.className = 'table-card';
-    card.innerHTML = `
-      <div class="table-number">${i}</div>
-      <div class="table-label">Table ${i}</div>
-      <div class="table-players">
-        <span class="players-dot"></span>${playerCount}/6 joueurs
-      </div>
-    `;
-    grid.appendChild(card);
-  }
+function openLobby() {
+  document.getElementById('lobbyOverlay').classList.add('show');
+  loadLobby();
+  _lobbyInterval = setInterval(loadLobby, 8000);
 }
 
-loadTablePlayers();
-setInterval(loadTablePlayers, 10000);
+function closeLobby() {
+  document.getElementById('lobbyOverlay').classList.remove('show');
+  clearInterval(_lobbyInterval);
+  _lobbyInterval = null;
+}
+
+function overlayClick(e) {
+  if (e.target === document.getElementById('lobbyOverlay')) closeLobby();
+}
+
+async function loadLobby() {
+  const thr = new Date(Date.now() - STALE_MS).toISOString();
+
+  // Fetch all waiting sessions for ludo tables in one query
+  const { data: sessions } = await sb
+    .from('game_sessions')
+    .select('id, table_id')
+    .eq('game_type', 'ludo')
+    .eq('status', 'waiting')
+    .order('created_at', { ascending: false });
+
+  // For each table, find the most recent waiting session and count active players
+  const results = await Promise.all(
+    Array.from({ length: N_TABLES }, (_, i) => i + 1).map(async n => {
+      const tid = `ludo-table-${n}`;
+      const sess = sessions?.find(s => s.table_id === tid);
+      let count = 0;
+      if (sess) {
+        const { count: c } = await sb
+          .from('players')
+          .select('*', { count: 'exact', head: true })
+          .eq('session_id', sess.id)
+          .eq('is_active', true)
+          .gte('last_seen', thr);
+        count = c || 0;
+      }
+      return { n, count, hasSession: !!sess, full: count >= MAX_PLAYERS };
+    })
+  );
+
+  renderLobby(results);
+}
+
+function renderLobby(results) {
+  const list = document.getElementById('tablesList');
+  const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  list.innerHTML = results.map(r => {
+    const dotColor = r.full ? '#e74c3c' : r.count === 0 ? '#2ecc71' : r.count < 4 ? '#f1c40f' : '#e67e22';
+    const label = r.full
+      ? 'Table complète'
+      : r.count === 0
+        ? 'En attente de joueurs'
+        : `${r.count} joueur${r.count > 1 ? 's' : ''} en attente`;
+
+    const pips = Array.from({ length: MAX_PLAYERS }, (_, i) =>
+      `<div class="pip${i < r.count ? ' filled' : ''}"></div>`
+    ).join('');
+
+    const btnDisabled = r.full ? 'disabled' : '';
+    const btnLabel = r.full ? 'Complet' : 'Rejoindre';
+
+    return `
+      <div class="table-row${r.full ? ' full' : ''}">
+        <div class="table-info">
+          <div class="table-num">${r.n}</div>
+          <div>
+            <div class="table-name">Table ${r.n}</div>
+            <div class="table-count">
+              <span class="dot-live" style="background:${dotColor}"></span>
+              ${label}
+            </div>
+            <div class="pips">${pips}</div>
+          </div>
+        </div>
+        <button class="btn-join" onclick="joinTable(${r.n})" ${btnDisabled}>${btnLabel}</button>
+      </div>`;
+  }).join('');
+
+  document.getElementById('lobbyRefreshInfo').textContent = `Mis à jour à ${now} · Actualisation automatique toutes les 8s`;
+}
+
+function joinTable(n) {
+  closeLobby();
+  location.href = `ludo-table-${n}.html?join=1`;
+}
 </script>
 </body>
 </html>

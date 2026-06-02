@@ -176,7 +176,7 @@ header { display:flex; align-items:center; justify-content:space-between; paddin
 // ============================================================
 // TABLE CONFIG
 // ============================================================
-const TABLE_ID = 'ludo-table-' + (location.pathname.match(/ludo-table-(\d)/)||['','1'])[1];
+const TABLE_ID = 'ludo-table-' + (location.pathname.match(/ludo-table-(\d+)/)||['','1'])[1];
 document.getElementById('tableNum').textContent = TABLE_ID.split('-').pop();
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
@@ -563,7 +563,7 @@ async function joinGoList() {
 async function loadJoinList() {
   const thr = new Date(Date.now()-STALE_MS).toISOString();
   const currentNum = parseInt(TABLE_ID.split('-').pop());
-  const results = await Promise.all([1,2,3,4,5].map(async n => {
+  const results = await Promise.all([1,2,3,4,5,6,7,8,9,10].map(async n => {
     const tid = `ludo-table-${n}`;
     let count = 0, hasWaiting = false;
     const {data:sess} = await sb.from('game_sessions').select('id,status')
