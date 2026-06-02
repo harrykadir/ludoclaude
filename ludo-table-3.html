@@ -969,22 +969,22 @@ async function executeMove(move,dice){
   myToks[move.tokenIdx]={rel:move.to>=59?59:move.to};
   tokens[state.myPlayer.id]=myToks;
 
-  // Capture (only on outer track, non-safe)
+  // Capture: a colored start cell is safe ONLY for its owner; opponents on it can be captured
   if(move.to>=0&&move.to<=53){
     const myAbs=(move.to+SETUPS[pi].offset)%N_TOTAL;
-    if(!isSafe(myAbs)){
-      state.players.filter(p=>p.is_active&&p.id!==state.myPlayer.id).forEach(opp=>{
-        const oppPi=boardIndex(opp.id);
-        if(oppPi<0) return;
-        const oppToks=[...(tokens[opp.id]||[{rel:-1},{rel:-1},{rel:-1},{rel:-1}])];
-        let cap=false;
-        oppToks.forEach((t,ti)=>{
-          if((t.rel??-1)<0||(t.rel??-1)>53) return;
-          if((t.rel+SETUPS[oppPi].offset)%N_TOTAL===myAbs){oppToks[ti]={rel:-1};cap=true;}
-        });
-        if(cap){tokens[opp.id]=oppToks;addLog(`<span>${state.myPlayer.name}</span> capture un pion de ${opp.name}!`);}
+    state.players.filter(p=>p.is_active&&p.id!==state.myPlayer.id).forEach(opp=>{
+      const oppPi=boardIndex(opp.id);
+      if(oppPi<0) return;
+      // Skip if the opponent token sits on ITS OWN start cell (protected for the owner only)
+      if(isSafe(myAbs)&&myAbs===SETUPS[oppPi].offset%N_TOTAL) return;
+      const oppToks=[...(tokens[opp.id]||[{rel:-1},{rel:-1},{rel:-1},{rel:-1}])];
+      let cap=false;
+      oppToks.forEach((t,ti)=>{
+        if((t.rel??-1)<0||(t.rel??-1)>53) return;
+        if((t.rel+SETUPS[oppPi].offset)%N_TOTAL===myAbs){oppToks[ti]={rel:-1};cap=true;}
       });
-    }
+      if(cap){tokens[opp.id]=oppToks;addLog(`<span>${state.myPlayer.name}</span> capture un pion de ${opp.name}!`);}
+    });
   }
 
   const won=myToks.filter(t=>(t.rel??-1)>=59||t.rel===58).length>=4;
