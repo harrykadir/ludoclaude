@@ -270,19 +270,23 @@ const LUDO_QUESTIONS = [
   {level:'hard',question:"Quelle est LA compétence la plus impactante pour tirer parti d'un LLM au quotidien ?",options:["Connaître précisément les différences techniques entre tous les modèles disponibles","Savoir construire et itérer sur des prompts précis — avec le bon contexte, la bonne tâche, le bon format et des exemples concrets","Maîtriser l'API (interface de programmation) pour automatiser tous les workflows manuels","Créer des Skills réutilisables pour chaque tâche récurrente sans exception"],answer:1},
 ];
 
+// Each entry includes `parts`: an illustrative token-by-token split.
+// `tokens` always equals parts.length so the reveal screen is self-consistent
+// ("it's N tokens because here are the N pieces"). Real boundaries depend on
+// the model's tokenizer — this is a teaching approximation.
 const TOKEN_ROULETTE_QUESTIONS = [
-  { text: "Bonjour !", tokens: 3 },
-  { text: "Qu'est-ce que Claude Code ?", tokens: 8 },
-  { text: "Explique-moi le concept de context window en 3 phrases.", tokens: 14 },
-  { text: "Tu es un assistant IA utile, inoffensif et honnête.", tokens: 13 },
-  { text: "Write a Python function to reverse a string.", tokens: 11 },
-  { text: "Anthropic a fondé Claude pour créer une IA bénéfique et sûre pour l'humanité.", tokens: 20 },
-  { text: "The quick brown fox jumps over the lazy dog.", tokens: 10 },
-  { text: "Quelle est la différence entre Opus, Sonnet et Haiku ?", tokens: 14 },
-  { text: "def fibonacci(n): return n if n <= 1 else fibonacci(n-1) + fibonacci(n-2)", tokens: 22 },
-  { text: "Claude peut analyser des images, des PDFs, traiter du code et répondre en plusieurs langues.", tokens: 22 },
-  { text: "I", tokens: 1 },
-  { text: "Summarize this document in bullet points.", tokens: 8 }
+  { text: "Bonjour !", tokens: 3, parts: ["Bon","jour"," !"] },
+  { text: "Qu'est-ce que Claude Code ?", tokens: 8, parts: ["Qu","'","est","-ce"," que"," Claude"," Code"," ?"] },
+  { text: "Explique-moi le concept de context window en 3 phrases.", tokens: 14, parts: ["Expl","ique","-","moi"," le"," concept"," de"," context"," window"," en"," 3"," phr","ases","."] },
+  { text: "Tu es un assistant IA utile, inoffensif et honnête.", tokens: 13, parts: ["Tu"," es"," un"," assistant"," IA"," utile",","," inoff","ensif"," et"," honnê","te","."] },
+  { text: "Write a Python function to reverse a string.", tokens: 11, parts: ["Write"," a"," Python"," function"," to"," re","verse"," a"," str","ing","."] },
+  { text: "Anthropic a fondé Claude pour créer une IA bénéfique et sûre pour l'humanité.", tokens: 20, parts: ["Anth","ropic"," a"," fond","é"," Claude"," pour"," cré","er"," une"," IA"," bén","éfique"," et"," sû","re"," pour"," l","'humanité","."] },
+  { text: "The quick brown fox jumps over the lazy dog.", tokens: 10, parts: ["The"," quick"," brown"," fox"," jumps"," over"," the"," lazy"," dog","."] },
+  { text: "Quelle est la différence entre Opus, Sonnet et Haiku ?", tokens: 14, parts: ["Qu","elle"," est"," la"," différence"," entre"," Opus",","," Son","net"," et"," Ha","iku"," ?"] },
+  { text: "def fibonacci(n): return n if n <= 1 else fibonacci(n-1) + fibonacci(n-2)", tokens: 22, parts: ["def"," fibonacci","(","n","):"," return"," n"," if"," n"," <="," 1"," else"," fibonacci","(","n","-","1",")"," +"," fibonacci","(","n-2)"] },
+  { text: "Claude peut analyser des images, des PDFs, traiter du code et répondre en plusieurs langues.", tokens: 22, parts: ["Claude"," peut"," anal","yser"," des"," images",","," des"," PD","Fs",","," trait","er"," du"," code"," et"," répond","re"," en"," plusieurs"," langues","."] },
+  { text: "I", tokens: 1, parts: ["I"] },
+  { text: "Summarize this document in bullet points.", tokens: 8, parts: ["Sum","marize"," this"," document"," in"," bullet"," points","."] }
 ];
 
 const MISCONCEPTIONS_QUESTIONS = [

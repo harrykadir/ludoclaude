@@ -141,7 +141,8 @@ header {
   <div class="reveal-modal">
     <div id="revealText" class="reveal-title"></div>
     <div class="reveal-answer" id="revealAnswer"></div>
-    <div id="revealSubtitle" style="color:rgba(255,255,255,0.5);margin-bottom:24px"></div>
+    <div id="revealSubtitle" style="color:rgba(255,255,255,0.5);margin-bottom:14px"></div>
+    <div id="revealBreakdown" style="margin-bottom:24px"></div>
     <div class="estimates-grid" id="revealEstimates"></div>
     <div style="margin-top:24px;display:flex;align-items:center;gap:20px;justify-content:center">
       <button class="btn btn-primary" style="padding:12px 28px" id="revealNextBtn" onclick="nextRound()">Round suivant →</button>
@@ -156,9 +157,9 @@ header {
 <!-- Game Over -->
 <div class="overlay" id="gameOverOverlay">
   <div class="modal" style="text-align:center">
-    <div style="font-size:3rem;margin-bottom:12px">🏆</div>
+    <div style="font-size:3rem;margin-bottom:12px" id="winnerTrophy">🏆</div>
     <h2 id="winnerName">Victoire !</h2>
-    <p style="margin-bottom:24px">a remporté la Token Roulette !</p>
+    <p style="margin-bottom:24px" id="winnerSubtitle">a remporté la Token Roulette !</p>
     <div id="finalScores" style="margin-bottom:24px"></div>
     <button class="btn btn-primary" style="padding:12px 32px" onclick="resetGame()">Rejouer</button>
     <a href="index.html" class="btn btn-secondary" style="display:inline-block;margin-top:10px;padding:12px 32px;text-decoration:none">Accueil</a>
@@ -595,6 +596,29 @@ async function hostApplyScores(gd) {
   await sb.from('game_sessions').update({ game_data: { ...gd, scored_round: sess.current_round } }).eq('id', sess.id);
 }
 
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// Show the phrase split token-by-token, each piece in its own box (visual separation).
+function renderTokenBreakdown(q, correct) {
+  const bd = document.getElementById('revealBreakdown');
+  if (!bd) return;
+  const parts = q.parts;
+  if (!parts || !parts.length) { bd.style.display = 'none'; bd.innerHTML = ''; return; }
+  bd.style.display = 'block';
+  const pills = parts.map((t,i) => {
+    // make leading spaces visible inside the box
+    const shown = escHtml(t).replace(/ /g, '·');
+    const bg = i % 2 ? 'rgba(240,147,251,0.20)' : 'rgba(255,255,255,0.07)';
+    return `<span style="white-space:pre;font-family:ui-monospace,Menlo,monospace;font-size:0.95rem;padding:4px 8px;margin:3px;border:1px solid rgba(240,147,251,0.4);border-radius:6px;background:${bg}">${shown}</span>`;
+  }).join('');
+  bd.innerHTML = `
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-bottom:8px">
+      Pourquoi ${correct} tokens ? Voici le découpage (illustratif — « · » = espace) :
+    </div>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center">${pills}</div>`;
+}
+
 function showRevealOverlay(gd) {
   const sess = state.session;
   const q = TOKEN_ROULETTE_QUESTIONS[sess.current_question_index];
@@ -609,6 +633,7 @@ function showRevealOverlay(gd) {
   document.getElementById('revealText').textContent = `La réponse était...`;
   document.getElementById('revealAnswer').textContent = `${correct} tokens`;
   document.getElementById('revealSubtitle').textContent = `"${q.text}"`;
+  renderTokenBreakdown(q, correct);
   document.getElementById('revealEstimates').innerHTML = scored.map((p,i) => `
     <div class="estimate-card ${i===0?'best':''}">
       <div class="estimate-name" style="color:${p.color}">${p.name}</div>
@@ -649,17 +674,33 @@ async function nextRound() {
 
 async function finishGame() {
   const sorted = [...state.players].filter(p=>p.is_active).sort((a,b)=>b.score-a.score);
-  const winner = sorted[0];
-  await sb.from('game_sessions').update({ status: 'finished', game_data: { ...state.session.game_data, winner: winner.name } }).eq('id', state.session.id);
-  await sb.from('game_events').insert({ session_id: state.session.id, event_type: 'game_over', event_data: { winner: winner.name } });
+  const topScore = sorted[0]?.score ?? 0;
+  const winners = sorted.filter(p => p.score === topScore);
+  const tie = winners.length > 1;
+  const winnerText = winners.map(p => p.name).join(' & ');
 
-  document.getElementById('winnerName').textContent = winner.name;
-  document.getElementById('finalScores').innerHTML = sorted.map((p,i) =>
-    `<div style="display:flex;align-items:center;gap:10px;margin:8px 0;justify-content:center">
-      <span style="font-size:1.2rem">${['🥇','🥈','🥉'][i]||''}</span>
+  await sb.from('game_sessions').update({ status: 'finished', game_data: { ...state.session.game_data, winner: winnerText, tie } }).eq('id', state.session.id);
+  await sb.from('game_events').insert({ session_id: state.session.id, event_type: 'game_over', event_data: { winner: winnerText, tie } });
+
+  showGameOver(winnerText, tie, sorted);
+}
+
+function showGameOver(winnerText, tie, sorted) {
+  document.getElementById('winnerTrophy').textContent = tie ? '🤝' : '🏆';
+  document.getElementById('winnerName').textContent = tie ? 'Égalité !' : winnerText;
+  document.getElementById('winnerSubtitle').textContent = tie
+    ? `${winnerText} terminent à égalité !`
+    : 'a remporté la Token Roulette !';
+  const topScore = sorted[0]?.score ?? 0;
+  const numTop = sorted.filter(x => x.score === topScore).length;
+  document.getElementById('finalScores').innerHTML = sorted.map((p,i) => {
+    const medal = p.score === topScore ? '🥇' : (['🥈','🥉'][i - numTop] || '');
+    return `<div style="display:flex;align-items:center;gap:10px;margin:8px 0;justify-content:center">
+      <span style="font-size:1.2rem">${medal}</span>
       <span style="font-weight:600">${p.name}</span>
       <span style="color:#f093fb;font-weight:800">${p.score} pts</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('gameOverOverlay').classList.add('show');
 }
 
@@ -686,8 +727,8 @@ function subscribeRealtime() {
       state.session = payload.new;
       // Reveal is handled by renderAll()/maybeReveal() below (state-driven, all clients)
       if (payload.new.status === 'finished' && payload.new.game_data?.winner) {
-        document.getElementById('winnerName').textContent = payload.new.game_data.winner;
-        document.getElementById('gameOverOverlay').classList.add('show');
+        const sorted = [...state.players].filter(p=>p.is_active).sort((a,b)=>b.score-a.score);
+        showGameOver(payload.new.game_data.winner, !!payload.new.game_data.tie, sorted);
       }
       renderAll();
     })
