@@ -640,7 +640,7 @@ async function joinSubmit() {
           .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',thr);
         if ((activeCount||0) > 0) {
           // Active players are already waiting — join them instead of evicting them
-          if(errEl) errEl.textContent = 'Une partie est déjà en attente sur cette table. Utilisez "Rejoindre une partie" pour y entrer.';
+          if(errEl){ errEl.innerHTML='Une partie est déjà ouverte sur cette table.'; const b=document.createElement('button');b.className='btn btn-primary';b.style='margin-top:10px;width:100%;padding:11px';b.textContent='→ Rejoindre la partie en cours';b.onclick=()=>{_joinMode='join';renderJoinStep('name');};errEl.appendChild(b); };
           nameEl.disabled = false; return;
         }
         // No active recent players — safe to close the ghost session

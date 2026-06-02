@@ -639,7 +639,7 @@ async function joinSubmit() {
         const {count:activeCount} = await sb.from('players').select('*',{count:'exact',head:true})
           .eq('session_id',existing.id).eq('is_active',true).gte('last_seen',thr);
         if ((activeCount||0) > 0) {
-          if(errEl) errEl.textContent = 'Une partie est déjà en attente sur cette table. Utilisez "Rejoindre une partie" pour y entrer.';
+          if(errEl){ errEl.innerHTML='Une partie est déjà ouverte sur cette table.'; const b=document.createElement('button');b.className='btn btn-primary';b.style='margin-top:10px;width:100%;padding:11px';b.textContent='→ Rejoindre la partie en cours';b.onclick=()=>{_joinMode='join';renderJoinStep('name');};errEl.appendChild(b); };
           nameEl.disabled = false; return;
         }
         await sb.from('players').update({is_active:false}).eq('session_id',existing.id).eq('is_active',true);
